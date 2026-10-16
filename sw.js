@@ -1,6 +1,6 @@
 // Voice Mood Tracker service worker: works offline, and adds the isolation headers
 // that let the voice model use several processor cores (GitHub Pages can't set them).
-const VERSION = 'vmt-shell-v1';
+const VERSION = 'vmt-shell-v2b';
 const SHELL = ['./', 'index.html', 'featex.js', 'featex-worker.js', 'mel.js', 'model-parts.js', 'ort.min.js',
   'ort-wasm-simd-threaded.jsep.mjs', 'ort-wasm-simd-threaded.jsep.wasm', 'ort-wasm-simd-threaded.mjs', 'ort-wasm-simd-threaded.wasm',
   'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
