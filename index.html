@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Voice Mood Tracker</title>
+<meta name="description" content="Private voice check-ins that track anxiety and low-mood signals over time, on your own device.">
+<meta name="theme-color" content="#241F30">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#F6F1EA; --panel:#FFFDF9; --ink:#1F1B26; --muted:#615A6B; --line:#E4DCD1; --soft:#EFE7DC;
+  --accent:#C2571A; --accent-ink:#FFFFFF; --anx:#C2571A; --low:#4A5BD4; --zone:#F1EADF; --zone2:#E9DFD1;
+  --good:#2F7D55; --warn:#B26B00; --crit:#B4233C;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#18161D; --panel:#221F2A; --ink:#F2EEF6; --muted:#ABA3B6; --line:#36313F; --soft:#2B2734;
+  --accent:#E08A50; --accent-ink:#1A1410; --anx:#C8682E; --low:#6E7BE8; --zone:#26222E; --zone2:#2E2937;
+  --good:#5DBB8A; --warn:#E3A43C; --crit:#F0718A; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#18161D; --panel:#221F2A; --ink:#F2EEF6; --muted:#ABA3B6; --line:#36313F; --soft:#2B2734;
+  --accent:#E08A50; --accent-ink:#1A1410; --anx:#C8682E; --low:#6E7BE8; --zone:#26222E; --zone2:#2E2937;
+  --good:#5DBB8A; --warn:#E3A43C; --crit:#F0718A; color-scheme:dark; }
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.wrap{max-width:560px;margin:0 auto;padding:18px 16px 40px}
+header{display:flex;align-items:center;gap:12px;margin:6px 0 18px}
+header img{width:40px;height:40px;border-radius:10px}
+h1{font-size:22px;margin:0;letter-spacing:-.01em}
+.sub{margin:0;color:var(--muted);font-size:14px}
+h2{font-size:18px;margin:0 0 10px}
+h3{font-size:15px;margin:0 0 6px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;margin:0 0 14px}
+.hint{color:var(--muted);font-size:14px;margin:6px 0 0}
+.tiny{color:var(--muted);font-size:12.5px}
+button,.btn{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:12px;padding:11px 16px;cursor:pointer;min-height:44px}
+button:disabled{opacity:.5;cursor:default}
+.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.wide{width:100%}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1}
+.tabs{display:flex;gap:6px;background:var(--soft);border-radius:14px;padding:4px;margin:0 0 14px}
+.tabs button{flex:1;border:none;background:none;min-height:40px;padding:8px}
+.tabs button.on{background:var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.progress{height:8px;border-radius:99px;background:var(--soft);overflow:hidden;margin:10px 0 4px}
+.progress>div{height:100%;width:0;background:var(--accent);transition:width .3s}
+.big{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:26px 18px}
+.mic{width:156px;height:156px;border-radius:50%;border:none;background:var(--accent);color:var(--accent-ink);font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;box-shadow:0 8px 24px rgba(194,87,26,.25)}
+.mic svg{width:42px;height:42px}
+.ring{position:relative;width:180px;height:180px}
+.ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.ring .t{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;font-variant-numeric:tabular-nums}
+.ring .t b{font-size:40px;line-height:1}
+.meter{width:200px;height:10px;border-radius:99px;background:var(--soft);overflow:hidden}
+.meter>div{height:100%;width:0;background:var(--low);transition:width .08s}
+.prompt{font-size:17px;max-width:30ch}
+label.sl{display:block;margin:14px 0 4px;font-weight:600}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.scale{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}
+textarea{width:100%;font:inherit;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--bg);color:var(--ink);min-height:70px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chips button{min-height:36px;padding:6px 12px;font-weight:500;font-size:14px}
+.chips button.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.res{border-left:5px solid var(--line)}
+.res .lvl{font-size:26px;font-weight:700;margin:2px 0}
+.bar{position:relative;height:14px;border-radius:99px;margin:12px 0 4px;overflow:hidden;display:flex;gap:2px}
+.bar>span{flex:1;background:var(--zone2)}
+.bar>span.on{background:var(--soft);outline:2px solid currentColor;outline-offset:-2px}
+.mark{position:relative;height:14px;margin-top:-18px}
+.mark i{position:absolute;top:-2px;width:4px;height:18px;border-radius:2px;background:var(--ink);transform:translateX(-2px)}
+.zl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.usual{font-size:14px;margin-top:8px}
+.chart{width:100%;height:auto;display:block;touch-action:pan-y}
+.legendline{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);margin:0 0 4px}
+.legendline i{width:18px;height:3px;border-radius:2px;display:inline-block}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;padding:6px 9px;border-radius:8px;z-index:9;max-width:240px;display:none}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--bg)}
+.item .top{display:flex;justify-content:space-between;gap:8px;font-size:14px;color:var(--muted)}
+.item .lv{display:flex;gap:14px;flex-wrap:wrap;font-weight:600;margin-top:2px}
+.item .note{font-size:14px;margin-top:4px;white-space:pre-wrap}
+.item .del{min-height:32px;padding:4px 10px;font-size:13px;font-weight:500}
+.crisis{border-left:5px solid var(--crit)}
+.status{min-height:1.4em;font-size:14px;color:var(--muted);margin-top:6px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:10;display:none;max-width:90vw}
+details summary{cursor:pointer;font-weight:600}
+a{color:var(--accent)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="icon-192.png" alt="">
+    <div><h1>Voice Mood Tracker</h1><p class="sub">Your voice, your phone, your patterns.</p></div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button id="tabCheck" class="on" role="tab">Check in</button>
+    <button id="tabHist" role="tab">History</button>
+    <button id="tabAbout" role="tab">About</button>
+  </nav>
+
+  <!-- ===== CHECK IN ===== -->
+  <section id="pCheck">
+    <div class="card" id="setup" hidden>
+      <h2>One-time setup</h2>
+      <p>The voice model needs to download once (<b id="mSize">354 MB</b>). After that it lives on this phone and works offline. Wi-Fi is best.</p>
+      <div class="progress" id="dlProg" hidden><div></div></div>
+      <div class="status" id="dlStatus"></div>
+      <button class="primary wide" id="dlBtn" style="margin-top:8px">Download voice model</button>
+      <p class="tiny" style="margin-top:10px">Each piece is checked against its fingerprint before it's saved, so a damaged or altered file is never used.</p>
+    </div>
+
+    <div class="card big" id="home" hidden>
+      <button class="mic" id="startBtn" aria-label="Start a check-in">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        Check in
+      </button>
+      <p class="prompt" id="promptText">Talk for one minute about anything: your day, what's on your mind, or something you're looking forward to.</p>
+      <p class="hint">Your voice never leaves this phone. Only the scores are saved.</p>
+      <div class="status" id="homeStatus"></div>
+    </div>
+
+    <div class="card big" id="rec" hidden>
+      <div class="ring">
+        <svg viewBox="0 0 180 180"><circle cx="90" cy="90" r="80" stroke="var(--soft)" stroke-width="10" fill="none"/>
+          <circle id="ringArc" cx="90" cy="90" r="80" stroke="var(--accent)" stroke-width="10" fill="none" stroke-linecap="round" stroke-dasharray="502.65" stroke-dashoffset="502.65"/></svg>
+        <div class="t"><b id="recSecs">60</b><span class="tiny">seconds left</span></div>
+      </div>
+      <div class="meter" aria-hidden="true"><div id="lvl"></div></div>
+      <p class="prompt" id="recPrompt">Keep talking naturally…</p>
+      <button id="stopBtn">Stop</button>
+      <p class="tiny" id="stopHint">Stopping before 30 seconds cancels the check-in.</p>
+    </div>
+
+    <div class="card" id="rate" hidden>
+      <div class="status" id="anStatus" style="margin:0 0 4px">Analyzing your voice…</div>
+      <div class="progress" id="anProg"><div></div></div>
+      <h2 style="margin-top:14px">While that runs: how do you feel?</h2>
+      <p class="hint" style="margin-top:0">Optional. Rating yourself first helps you learn to read your own signals, and compare them with your voice over time.</p>
+      <label class="sl" for="sAnx">Anxious / on edge <span id="sAnxV" class="tiny">(not rated)</span></label>
+      <input type="range" id="sAnx" min="0" max="10" step="1" value="0">
+      <div class="scale"><span>Not at all</span><span>Extremely</span></div>
+      <label class="sl" for="sLow">Down / low <span id="sLowV" class="tiny">(not rated)</span></label>
+      <input type="range" id="sLow" min="0" max="10" step="1" value="0">
+      <div class="scale"><span>Not at all</span><span>Extremely</span></div>
+      <label class="sl" for="note">Anything going on? (optional)</label>
+      <div class="chips" id="tags"></div>
+      <textarea id="note" placeholder="Sleep, a cold, a long day of talking, good news…" style="margin-top:8px"></textarea>
+      <div class="row" style="margin-top:14px">
+        <button id="skipRate">Skip rating</button>
+        <button class="primary" id="saveRate">Save</button>
+      </div>
+      <p class="tiny" id="waitNote" hidden style="margin-top:8px">Saved. Your result will show as soon as the analysis finishes.</p>
+    </div>
+
+    <div id="result" hidden>
+      <div class="card res" id="resAnx"></div>
+      <div class="card res" id="resLow"></div>
+      <div class="card crisis" id="resCrisis" hidden>
+        <h3>You don't have to sit with this alone</h3>
+        <p style="margin:0">If you're struggling or thinking about hurting yourself, call or text <b>988</b> (US), or text <b>HOME</b> to <b>741741</b>. If you're in danger right now, call 911.</p>
+      </div>
+      <p class="hint" style="margin:0 4px 14px">One reading is a rough signal. A cold, tiredness, or a long day of talking can shift it. Patterns over many check-ins mean more. This is not a diagnosis.</p>
+      <button class="primary wide" id="doneBtn">Done</button>
+    </div>
+  </section>
+
+  <!-- ===== HISTORY ===== -->
+  <section id="pHist" hidden>
+    <div class="card" id="histEmpty"><p style="margin:0">No check-ins yet. Your trends will appear here after your first one.</p></div>
+    <div class="card" id="charts" hidden>
+      <h2>Anxiety signals</h2>
+      <div class="legendline"><i style="background:var(--anx)"></i>Voice score <span class="tiny">· tap a point to see your own rating</span></div>
+      <svg class="chart" id="chAnx" viewBox="0 0 520 200" role="img" aria-label="Anxiety voice scores over time"></svg>
+      <h2 style="margin-top:18px">Low-mood signals</h2>
+      <div class="legendline"><i style="background:var(--low)"></i>Voice score <span class="tiny">· tap a point to see your own rating</span></div>
+      <svg class="chart" id="chLow" viewBox="0 0 520 200" role="img" aria-label="Low-mood voice scores over time"></svg>
+      <p class="tiny" style="margin-top:8px">Shaded bands are the model's levels. Higher means stronger signals. Tap a point for details.</p>
+    </div>
+    <div class="card">
+      <h2>Your check-ins</h2>
+      <div class="list" id="list"></div>
+    </div>
+    <div class="card">
+      <h2>Backup</h2>
+      <p class="hint" style="margin-top:0">Your history is stored only in this app on this phone. Export a copy now and then, or to share with a doctor or therapist.</p>
+      <div class="row" style="margin-top:10px">
+        <button id="exportBtn">Export CSV</button>
+        <label class="btn" style="text-align:center;display:flex;align-items:center;justify-content:center">Import CSV<input type="file" id="importIn" accept=".csv,text/csv" hidden></label>
+      </div>
+      <a id="exportLink" hidden></a>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT ===== -->
+  <section id="pAbout" hidden>
+    <div class="card">
+      <h2>What this is</h2>
+      <p>A private way to notice patterns in how your body is doing. Each check-in records one minute of you talking, then a voice model listens to <i>how</i> you speak (pitch, rhythm, energy, pauses), not what you say. It gives two signals: <b>anxiety</b> and <b>low mood</b>.</p>
+      <p>It may help with body awareness, including for people with alexithymia who find it hard to name what they feel. Rate yourself before you see the result, then compare over time.</p>
+    </div>
+    <div class="card">
+      <h2>What the research supports</h2>
+      <ul style="padding-left:20px;margin:0">
+        <li>In an independent study, the model separated people with and without depression with an accuracy (AUC) of about <b>0.71</b>, where 0.5 is a coin flip and 1.0 is perfect. Real, but modest.</li>
+        <li>It worked worse for some groups (for example, pregnant women). No independent anxiety accuracy has been published yet.</li>
+        <li>It was trained on mostly American English speech, about 35,000 people. Other languages and accents may be less accurate.</li>
+        <li>Levels line up with two standard questionnaires: PHQ-9 (depression) and GAD-7 (anxiety).</li>
+        <li><b>Trends over many check-ins matter more than any single reading.</b> Colds, allergies, tiredness, and hormones can all change your voice.</li>
+      </ul>
+      <p class="hint">This is a personal tracking and research tool, not a medical device. It can't diagnose anything. Diagnosis and treatment need a doctor or licensed clinician.</p>
+    </div>
+    <div class="card">
+      <h2>Privacy</h2>
+      <p style="margin:0">Your recording is analyzed on this phone and then thrown away. Only the scores, your ratings, and notes are saved, in this app only. Nothing is sent anywhere. The model was downloaded once from this site, and the app checks its fingerprints.</p>
+    </div>
+    <div class="card">
+      <h2>With gratitude to Kintsugi Health</h2>
+      <p>This app runs the <b>DAM 3.1 Depression and Anxiety Model</b> made by <b>Kintsugi Health</b>. They spent years and real resources building and testing it, worked toward FDA review, and then released it openly so it wouldn't go to waste. Thank you to the whole team and to the thousands of people whose voices made it possible.</p>
+      <p class="tiny">Model: KintsugiHealth/dam, Apache License 2.0. Converted to half-precision ONNX for on-device use (scores match the original within 0.001). Built on OpenAI's Whisper-small.en. Runs with ONNX Runtime Web (MIT License).</p>
+    </div>
+    <div class="card crisis">
+      <h3>Need support now?</h3>
+      <p style="margin:0">Call or text <b>988</b> (US Suicide &amp; Crisis Lifeline), or text <b>HOME</b> to <b>741741</b>. In an emergency, call 911.</p>
+    </div>
+    <div class="card">
+      <h2>Settings</h2>
+      <div class="status" id="engineInfo" style="margin:0 0 10px"></div>
+      <div class="row">
+        <button id="themeBtn">Theme: Auto</button>
+        <button id="installBtn" hidden>Install app</button>
+      </div>
+      <details style="margin-top:14px"><summary>Remove the voice model</summary>
+        <p class="hint">Frees 354 MB. Your history stays. You'd need to download the model again to check in.</p>
+        <button id="rmModel">Remove voice model</button>
+      </details>
+      <p class="tiny" style="margin-top:14px">Version 1 · made by MLSS</p>
+    </div>
+  </section>
+</div>
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+
+<script src="model-parts.js"></script>
+<script src="ort.min.js"></script>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const MODEL_CACHE = 'vmt-model-v1';
+const REC_SECS = 60, MIN_SECS = 30, SR = 16000;
+// Kintsugi's inference thresholds (config.py): raw score -> level
+const TH = { low: [-0.6699, -0.2908], anx: [-0.7939, -0.2173, 0.1521] };
+const LEVELS = {
+  anx: [{n:'Low', q:'GAD-7 0–4', c:'--good'}, {n:'Mild', q:'GAD-7 5–9', c:'--warn'}, {n:'Moderate', q:'GAD-7 10–14', c:'--warn'}, {n:'High', q:'GAD-7 15+', c:'--crit'}],
+  low: [{n:'Low', q:'PHQ-9 0–9', c:'--good'}, {n:'Elevated', q:'PHQ-9 10–14', c:'--warn'}, {n:'High', q:'PHQ-9 15+', c:'--crit'}]
+};
+const TAGS = ['Sick', 'Tired', 'Poor sleep', 'Long day talking', 'Period', 'Caffeine', 'Good day'];
+const level = (v, th) => { let i = 0; while (i < th.length && v > th[i]) i++; return i; };
+function toast(m){ const t=$('toast'); t.textContent=m; t.style.display='block'; clearTimeout(toast.h); toast.h=setTimeout(()=>t.style.display='none',3200); }
+
+// ---------- service worker (offline + multi-core) ----------
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').then(() => {
+    if (!window.crossOriginIsolated && !sessionStorage.getItem('vmt-reloaded')) {
+      navigator.serviceWorker.ready.then(() => { sessionStorage.setItem('vmt-reloaded','1'); location.reload(); });
+    }
+  }).catch(()=>{});
+}
+
+// ---------- theme ----------
+let theme = 'auto'; try { theme = localStorage.getItem('vmt-theme') || 'auto'; } catch(e){}
+function applyTheme(){ if (theme==='auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', theme);
+  $('themeBtn').textContent = 'Theme: ' + theme[0].toUpperCase() + theme.slice(1); if (histCache) drawCharts(histCache); }
+$('themeBtn').onclick = () => { theme = theme==='auto'?'light':theme==='light'?'dark':'auto'; try{ localStorage.setItem('vmt-theme',theme);}catch(e){} applyTheme(); };
+
+// ---------- tabs ----------
+const tabs = {tabCheck:'pCheck', tabHist:'pHist', tabAbout:'pAbout'};
+Object.keys(tabs).forEach(k => $(k).onclick = () => { Object.entries(tabs).forEach(([b,p]) => { $(b).classList.toggle('on', b===k); $(p).hidden = b!==k; }); if (k==='tabHist') renderHistory(); });
+
+// ---------- storage (IndexedDB) ----------
+let dbP = null;
+function db(){ if (!dbP) dbP = new Promise((res, rej) => { const r = indexedDB.open('vmt', 1);
+  r.onupgradeneeded = () => r.result.createObjectStore('checkins', {keyPath:'id'}); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); return dbP; }
+async function tx(mode, fn){ const d = await db(); return new Promise((res, rej) => { const t = d.transaction('checkins', mode); const s = t.objectStore('checkins'); const out = fn(s); t.oncomplete = () => res(out && out.result !== undefined ? out.result : out); t.onerror = () => rej(t.error); }); }
+const saveCheckin = c => tx('readwrite', s => s.put(c));
+const deleteCheckin = id => tx('readwrite', s => s.delete(id));
+const allCheckins = () => tx('readonly', s => s.getAll()).then(a => (a||[]).sort((x,y) => x.time - y.time));
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch(e){}
+
+// ---------- model download + verify ----------
+async function sha256hex(buf){ const h = await crypto.subtle.digest('SHA-256', buf); return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join(''); }
+async function modelCached(){ try { const c = await caches.open(MODEL_CACHE); for (const p of MODEL_PARTS) if (!(await c.match(p.name))) return false; return true; } catch(e){ return false; } }
+async function downloadModel(){
+  const c = await caches.open(MODEL_CACHE); let done = 0;
+  $('dlProg').hidden = false; $('dlBtn').disabled = true;
+  try {
+    for (let i = 0; i < MODEL_PARTS.length; i++){
+      const p = MODEL_PARTS[i];
+      if (await c.match(p.name)) { done += p.size; continue; }
+      $('dlStatus').textContent = `Downloading part ${i+1} of ${MODEL_PARTS.length}…`;
+      let buf = null;
+      for (let attempt = 0; attempt < 3 && !buf; attempt++){
+        try { const r = await fetch(p.name, {cache:'no-store'}); if (!r.ok) throw new Error('HTTP '+r.status);
+          const reader = r.body.getReader(); const chunks = []; let got = 0;
+          for(;;){ const {done:d, value} = await reader.read(); if (d) break; chunks.push(value); got += value.length; setDl((done+got)/MODEL_TOTAL); }
+          const b = new Uint8Array(got); let o = 0; for (const ch of chunks){ b.set(ch, o); o += ch.length; }
+          if (b.length !== p.size || await sha256hex(b) !== p.sha) throw new Error('fingerprint mismatch');
+          buf = b;
+        } catch (err) { if (attempt === 2) throw err; }
+      }
+      await c.put(p.name, new Response(buf, {headers:{'Content-Type':'application/octet-stream'}}));
+      done += p.size; setDl(done/MODEL_TOTAL);
+    }
+    $('dlStatus').textContent = 'Voice model saved and verified.';
+    showHome();
+  } catch (err) {
+    $('dlStatus').textContent = 'The download stopped (' + (err.message||err) + '). Tap the button to continue; finished parts are kept.';
+    $('dlBtn').disabled = false; $('dlBtn').textContent = 'Continue download';
+  }
+}
+function setDl(f){ $('dlProg').firstElementChild.style.width = (f*100).toFixed(1)+'%'; }
+$('dlBtn').onclick = downloadModel;
+$('rmModel').onclick = async () => { if (!confirm('Remove the voice model from this phone?')) return; await caches.delete(MODEL_CACHE); session = null; toast('Voice model removed.'); init(); };
+
+// ---------- model session ----------
+let session = null, sessionP = null, engine = '';
+const SELFTEST = [0.3611, 0.4758]; // reference scores for a fixed test pattern (full-precision model)
+function testInput(){ const x = new Float32Array(80*3000); for (let m=0;m<80;m++) for (let t=0;t<3000;t++) x[m*3000+t] = 0.5*Math.sin(0.013*t+0.21*m)+0.1; return new ort.Tensor('float32', x, [1,80,3000]); }
+async function modelBytes(){ const c = await caches.open(MODEL_CACHE); const all = new Uint8Array(MODEL_TOTAL); let o = 0;
+  for (const p of MODEL_PARTS){ const r = await c.match(p.name); if (!r) throw new Error('missing model part'); const b = new Uint8Array(await r.arrayBuffer()); all.set(b, o); o += b.length; } return all; }
+async function getSession(onMsg){
+  if (session) return session; if (sessionP) return sessionP;
+  sessionP = (async () => {
+    ort.env.wasm.wasmPaths = './';
+    const cores = navigator.hardwareConcurrency || 2;
+    ort.env.wasm.numThreads = window.crossOriginIsolated ? Math.min(4, Math.max(1, cores - 1)) : 1;
+    let pref = ''; try { pref = localStorage.getItem('vmt-engine') || ''; } catch(e){}
+    onMsg && onMsg('Loading the voice model…');
+    let bytes = await modelBytes();
+    if (pref !== 'wasm' && navigator.gpu) {
+      try {
+        const ad = await navigator.gpu.requestAdapter();
+        if (ad && ad.features.has('shader-f16')) {
+          const s = await ort.InferenceSession.create(bytes, {executionProviders:['webgpu']});
+          const o = (await s.run({features: testInput()})).scores.data;
+          if (Math.abs(o[0]-SELFTEST[0]) < 0.02 && Math.abs(o[1]-SELFTEST[1]) < 0.02) { engine = 'Graphics chip (fast)'; bytes = null; return (session = s); }
+          await s.release();
+        }
+      } catch (e) {}
+      try { localStorage.setItem('vmt-engine','wasm'); } catch(e){}
+    }
+    const s = await ort.InferenceSession.create(bytes, {executionProviders:['wasm'], graphOptimizationLevel:'all'});
+    bytes = null;
+    engine = 'Processor, ' + ort.env.wasm.numThreads + (ort.env.wasm.numThreads > 1 ? ' cores' : ' core');
+    return (session = s);
+  })();
+  try { return await sessionP; } finally { sessionP = null; updateEngineInfo(); }
+}
+function updateEngineInfo(){ $('engineInfo').textContent = engine ? 'Voice model runs on: ' + engine + '.' : ''; }
+
+// ---------- recording ----------
+let rec = null;
+async function startCheckin(){
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false, channelCount:1}}); }
+  catch (e) { $('homeStatus').textContent = 'The microphone is needed for a check-in. Allow it in your browser settings and try again.'; return; }
+  const ac = new (window.AudioContext || window.webkitAudioContext)();
+  await ac.resume();
+  const src = ac.createMediaStreamSource(stream);
+  const proc = ac.createScriptProcessor(4096, 1, 1);
+  const parts = []; let n = 0;
+  proc.onaudioprocess = e => { if (!rec || rec.stopped) return; const d = e.inputBuffer.getChannelData(0); parts.push(new Float32Array(d)); n += d.length;
+    let s = 0; for (let i=0;i<d.length;i++) s += d[i]*d[i]; const rms = Math.sqrt(s/d.length); $('lvl').style.width = Math.min(100, rms*600) + '%'; };
+  const mute = ac.createGain(); mute.gain.value = 0; src.connect(proc); proc.connect(mute); mute.connect(ac.destination);
+  rec = {ac, stream, proc, parts, get n(){ return n; }, t0: performance.now(), stopped: false};
+  show('rec'); $('stopHint').hidden = false;
+  getSession().catch(()=>{}); // warm up the model while you talk
+  const arc = $('ringArc'), C = 502.65;
+  rec.timer = setInterval(() => {
+    const el = (performance.now() - rec.t0) / 1000;
+    $('recSecs').textContent = Math.max(0, Math.ceil(REC_SECS - el));
+    arc.setAttribute('stroke-dashoffset', (C * (1 - Math.min(1, el/REC_SECS))).toFixed(1));
+    $('stopHint').textContent = el < MIN_SECS ? 'Stopping before 30 seconds cancels the check-in.' : 'Stopping now uses the first 30 seconds.';
+    if (el >= REC_SECS) finishRecording(false);
+  }, 200);
+}
+async function finishRecording(early){
+  if (!rec || rec.stopped) return; rec.stopped = true; clearInterval(rec.timer);
+  const {ac, stream, proc, parts} = rec; const rate = ac.sampleRate; const secs = rec.n / rate;
+  try { proc.disconnect(); } catch(e){} stream.getTracks().forEach(t => t.stop());
+  const raw = new Float32Array(rec.n); let o = 0; for (const p of parts){ raw.set(p, o); o += p.length; }
+  ac.close(); rec = null;
+  if (secs < MIN_SECS - 0.5) { showHome(); $('homeStatus').textContent = 'Check-in cancelled. It needs at least 30 seconds of talking.'; return; }
+  const useSecs = secs >= REC_SECS - 0.5 ? REC_SECS : MIN_SECS;
+  const audio = await resample(raw, rate, useSecs);
+  startAnalysis(audio, useSecs);
+}
+async function resample(x, rate, secs){
+  const len = Math.round(secs * SR);
+  const oc = new OfflineAudioContext(1, len, SR);
+  const b = oc.createBuffer(1, Math.min(x.length, Math.round(secs*rate)), rate); b.copyToChannel(x.subarray(0, b.length), 0);
+  const s = oc.createBufferSource(); s.buffer = b; s.connect(oc.destination); s.start();
+  const out = await oc.startRendering(); return out.getChannelData(0).slice();
+}
+$('startBtn').onclick = startCheckin;
+$('stopBtn').onclick = () => finishRecording(true);
+
+// ---------- analysis + rating ----------
+let pending = null; // {analysis: Promise, rating: {...}|null, secs}
+function startAnalysis(audio, secs){
+  resetRating(); show('rate'); $('waitNote').hidden = true;
+  const prog = f => $('anProg').firstElementChild.style.width = (f*100).toFixed(0)+'%';
+  const status = m => $('anStatus').textContent = m;
+  prog(0.05); status('Measuring your voice…');
+  const analysis = (async () => {
+    const feats = await new Promise((res, rej) => { const w = new Worker('featex-worker.js');
+      w.onmessage = e => { if (e.data.progress) prog(0.05 + 0.25*e.data.progress); if (e.data.done){ w.terminate(); res(e.data); } };
+      w.onerror = e => { w.terminate(); rej(new Error('feature step failed')); };
+      w.postMessage({audio}, [audio.buffer]); });
+    status('Loading the voice model…'); prog(0.32);
+    const s = await getSession(status);
+    status('Listening for patterns… this can take a minute or two.');
+    const t0 = performance.now(); const est = (engine.startsWith('Graphics') ? 8 : 50) * feats.chunks;
+    const tick = setInterval(() => prog(0.35 + 0.6*Math.min(0.97, (performance.now()-t0)/1000/est)), 400);
+    try {
+      const out = await s.run({features: new ort.Tensor('float32', feats.data, [feats.chunks, 80, 3000])});
+      const d = out.scores.data; prog(1); status('Analysis done.');
+      return {low: d[0], anx: d[1]};
+    } finally { clearInterval(tick); }
+  })();
+  pending = {analysis, rating: null, secs, time: Date.now()};
+  analysis.catch(err => { status('Something went wrong: ' + (err.message || err) + '. Your recording was not saved.'); });
+}
+const rated = {sAnx:false, sLow:false};
+function resetRating(){ ['sAnx','sLow'].forEach(id => { $(id).value = 0; rated[id] = false; $(id+'V').textContent = '(not rated)'; }); $('note').value = '';
+  $('tags').innerHTML = ''; TAGS.forEach(t => { const b = document.createElement('button'); b.type='button'; b.textContent=t; b.onclick=()=>b.classList.toggle('on'); $('tags').appendChild(b); });
+  $('saveRate').disabled = false; $('skipRate').disabled = false; }
+['sAnx','sLow'].forEach(id => $(id).oninput = () => { rated[id] = true; $(id+'V').textContent = $(id).value + ' / 10'; });
+async function submitRating(skip){
+  if (!pending) return;
+  const tags = [...$('tags').querySelectorAll('.on')].map(b => b.textContent);
+  pending.rating = skip ? {selfAnx:null, selfLow:null, tags, note:$('note').value.trim()} :
+    {selfAnx: rated.sAnx ? +$('sAnx').value : null, selfLow: rated.sLow ? +$('sLow').value : null, tags, note: $('note').value.trim()};
+  $('saveRate').disabled = true; $('skipRate').disabled = true; $('waitNote').hidden = false;
+  let r; try { r = await pending.analysis; } catch (e) { return; }
+  const prev = await allCheckins();
+  const c = {id: 'c' + pending.time, time: pending.time, secs: pending.secs, model: 'DAM 3.1 fp16',
+    anx: +r.anx.toFixed(4), low: +r.low.toFixed(4), anxLevel: level(r.anx, TH.anx), lowLevel: level(r.low, TH.low), ...pending.rating};
+  await saveCheckin(c); pending = null; histCache = null;
+  showResult(c, prev);
+}
+$('saveRate').onclick = () => submitRating(false);
+$('skipRate').onclick = () => submitRating(true);
+
+function usualText(v, prevVals){
+  if (prevVals.length < 5) return `Your personal average appears after 5 check-ins (${prevVals.length} so far).`;
+  const m = prevVals.reduce((a,b)=>a+b,0)/prevVals.length; const sd = Math.sqrt(prevVals.reduce((a,b)=>a+(b-m)*(b-m),0)/prevVals.length) || 0.05;
+  const z = (v - m)/sd; return z > 1 ? 'Higher than your usual.' : z < -1 ? 'Lower than your usual.' : 'About your usual.';
+}
+function resultCard(el, key, title, v, lv, prevVals){
+  const L = LEVELS[key], th = TH[key], col = getComputedStyle(document.documentElement).getPropertyValue(L[lv].c);
+  el.style.borderLeftColor = col;
+  // position within a display range around the thresholds
+  const lo = th[0] - 0.6, hi = th[th.length-1] + 0.6, pos = Math.max(0, Math.min(1, (v - lo)/(hi - lo)));
+  const bounds = [lo, ...th, hi];
+  el.innerHTML = `<h3>${title}</h3><div class="lvl">${L[lv].n}</div>
+    <div class="tiny">Voice patterns like people who scored ${L[lv].q} on a standard questionnaire.</div>
+    <div class="bar" style="color:${col}">${L.map((z,i)=>`<span class="${i===lv?'on':''}" style="flex:${(bounds[i+1]-bounds[i]).toFixed(3)}"></span>`).join('')}</div>
+    <div class="mark"><i style="left:${(pos*100).toFixed(1)}%"></i></div>
+    <div class="zl"><span>${L[0].n}</span><span>${L[L.length-1].n}</span></div>
+    <div class="usual">${usualText(v, prevVals)}</div>`;
+}
+function showResult(c, prev){
+  resultCard($('resAnx'), 'anx', 'Anxiety signals', c.anx, c.anxLevel, prev.map(p=>p.anx));
+  resultCard($('resLow'), 'low', 'Low-mood signals', c.low, c.lowLevel, prev.map(p=>p.low));
+  $('resCrisis').hidden = c.lowLevel < 2;
+  show('result');
+}
+$('doneBtn').onclick = showHome;
+
+// ---------- views ----------
+function show(id){ ['setup','home','rec','rate','result'].forEach(k => $(k).hidden = k !== id); window.scrollTo(0,0); }
+function showHome(){ show('home'); $('homeStatus').textContent = ''; }
+async function init(){ if (await modelCached()) showHome(); else { show('setup'); $('dlBtn').disabled = false; $('dlBtn').textContent = 'Download voice model'; $('dlStatus').textContent=''; $('dlProg').hidden = true; } }
+
+// ---------- history ----------
+let histCache = null;
+const fmtDate = t => new Date(t).toLocaleString(undefined, {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+async function renderHistory(){
+  const all = histCache = await allCheckins();
+  $('histEmpty').hidden = all.length > 0; $('charts').hidden = all.length === 0;
+  const list = $('list'); list.innerHTML = '';
+  if (!all.length) { list.innerHTML = '<p class="hint" style="margin:0">Nothing yet.</p>'; return; }
+  drawCharts(all);
+  [...all].reverse().forEach(c => {
+    const d = document.createElement('div'); d.className = 'item';
+    const self = [c.selfAnx!=null?`you: ${c.selfAnx}/10`:'', c.selfLow!=null?`you: ${c.selfLow}/10`:''];
+    d.innerHTML = `<div class="top"><span>${fmtDate(c.time)}</span><button class="del">Delete</button></div>
+      <div class="lv"><span>Anxiety: ${LEVELS.anx[c.anxLevel].n}${self[0]?` <span class="tiny">(${self[0]})</span>`:''}</span><span>Low mood: ${LEVELS.low[c.lowLevel].n}${self[1]?` <span class="tiny">(${self[1]})</span>`:''}</span></div>`;
+    const extra = [(c.tags||[]).join(', '), c.note].filter(Boolean).join(' · ');
+    if (extra) { const n = document.createElement('div'); n.className='note'; n.textContent = extra; d.appendChild(n); }
+    d.querySelector('.del').onclick = async () => { if (!confirm('Delete this check-in?')) return; await deleteCheckin(c.id); renderHistory(); };
+    list.appendChild(d);
+  });
+}
+function cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function drawCharts(all){ drawChart($('chAnx'), all, 'anx', 'selfAnx', '--anx'); drawChart($('chLow'), all, 'low', 'selfLow', '--low'); }
+function drawChart(svg, all, key, selfKey, colVar){
+  const W = 520, H = 200, L = 8, R = 8, T = 10, B = 26, th = TH[key], lv = LEVELS[key];
+  const data = all.slice(-60);
+  const lo = Math.min(th[0]-0.4, ...data.map(d=>d[key])), hi = Math.max(th[th.length-1]+0.4, ...data.map(d=>d[key]));
+  const y = v => T + (H-T-B) * (1 - (v-lo)/(hi-lo));
+  const n = data.length, x = i => n === 1 ? (L + (W-L-R)/2) : L + (W-L-R) * i/(n-1);
+  const col = cssv(colVar), ink = cssv('--muted'), z1 = cssv('--zone'), z2 = cssv('--zone2'), panel = cssv('--panel');
+  let s = '';
+  const bounds = [lo, ...th, hi];
+  for (let i = 0; i < bounds.length-1; i++){ const yt = y(bounds[i+1]), yb = y(bounds[i]);
+    s += `<rect x="${L}" y="${yt.toFixed(1)}" width="${W-L-R}" height="${(yb-yt).toFixed(1)}" fill="${i%2?z2:z1}"/>`;
+    s += `<text x="${W-R-4}" y="${(yt+13).toFixed(1)}" text-anchor="end" font-size="11" fill="${ink}">${lv[i].n}</text>`; }
+  if (n > 1) s += `<polyline fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${data.map((d,i)=>x(i).toFixed(1)+','+y(d[key]).toFixed(1)).join(' ')}"/>`;
+  data.forEach((d,i) => {
+    s += `<circle cx="${x(i).toFixed(1)}" cy="${y(d[key]).toFixed(1)}" r="4.5" fill="${col}" stroke="${panel}" stroke-width="2"/>`;
+    s += `<rect class="hit" data-i="${i}" x="${(x(i)-14).toFixed(1)}" y="0" width="28" height="${H}" fill="transparent"/>`;
+  });
+  const first = data[0], last = data[n-1];
+  s += `<text x="${L}" y="${H-8}" font-size="11" fill="${ink}">${new Date(first.time).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</text>`;
+  if (n > 1) s += `<text x="${W-R}" y="${H-8}" font-size="11" text-anchor="end" fill="${ink}">${new Date(last.time).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</text>`;
+  svg.innerHTML = s;
+  svg.querySelectorAll('.hit').forEach(r => { const d = data[+r.dataset.i];
+    const showTip = e => { const t = $('tip'); t.innerHTML = `${fmtDate(d.time)}<br>Voice: ${lv[level(d[key], th)].n}` + (d[selfKey]!=null?`<br>You: ${d[selfKey]}/10`:'') + ((d.tags&&d.tags.length)?`<br>${d.tags.join(', ')}`:'');
+      t.style.display='block'; const px = (e.touches?e.touches[0].clientX:e.clientX), py = (e.touches?e.touches[0].clientY:e.clientY); t.style.left = Math.min(innerWidth-250, px+12)+'px'; t.style.top = (py-70)+'px'; };
+    r.addEventListener('pointerenter', showTip); r.addEventListener('pointerdown', showTip); r.addEventListener('pointerleave', () => $('tip').style.display='none'); });
+}
+document.addEventListener('pointerdown', e => { if (!e.target.classList || !e.target.classList.contains('hit')) $('tip').style.display='none'; });
+
+// ---------- CSV ----------
+const COLS = ['time','date','anx','anxLevel','low','lowLevel','selfAnx','selfLow','tags','note','secs','model'];
+const q = v => { v = v==null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; };
+$('exportBtn').onclick = async () => {
+  const all = await allCheckins(); if (!all.length) { toast('No check-ins to export yet.'); return; }
+  const rows = [COLS.join(',')].concat(all.map(c => COLS.map(k => k==='date' ? new Date(c.time).toISOString() : k==='tags' ? q((c.tags||[]).join('; ')) : k==='anxLevel' ? q(LEVELS.anx[c.anxLevel].n) : k==='lowLevel' ? q(LEVELS.low[c.lowLevel].n) : q(c[k])).join(',')));
+  const blob = new Blob([rows.join('\n')], {type:'text/csv'}); const a = $('exportLink');
+  a.href = URL.createObjectURL(blob); a.download = 'voice-mood-' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
+  toast('Exported ' + all.length + ' check-ins.');
+};
+function parseCSV(t){ const rows=[]; let row=[], f='', i=0, inq=false; while (i<t.length){ const ch=t[i];
+  if (inq){ if (ch==='"'){ if (t[i+1]==='"'){ f+='"'; i++; } else inq=false; } else f+=ch; }
+  else if (ch==='"') inq=true; else if (ch===','){ row.push(f); f=''; } else if (ch==='\n'||ch==='\r'){ if (ch==='\r'&&t[i+1]==='\n') i++; row.push(f); rows.push(row); row=[]; f=''; } else f+=ch; i++; }
+  if (f!==''||row.length){ row.push(f); rows.push(row); } return rows; }
+$('importIn').onchange = async e => {
+  const f = e.target.files[0]; e.target.value=''; if (!f) return;
+  const rows = parseCSV(await f.text()); const h = rows.shift() || []; const ix = k => h.indexOf(k);
+  if (ix('time') < 0 || ix('anx') < 0 || ix('low') < 0) { toast('That file isn\'t a Voice Mood Tracker export.'); return; }
+  let n = 0; const num = v => v===''||v==null ? null : +v;
+  for (const r of rows){ if (r.length < 3) continue; const time = +r[ix('time')]; if (!time) continue;
+    const anx = +r[ix('anx')], low = +r[ix('low')];
+    await saveCheckin({id:'c'+time, time, anx, low, anxLevel: level(anx, TH.anx), lowLevel: level(low, TH.low), selfAnx: num(r[ix('selfAnx')]), selfLow: num(r[ix('selfLow')]),
+      tags: (r[ix('tags')]||'').split(';').map(s=>s.trim()).filter(Boolean), note: r[ix('note')]||'', secs: num(r[ix('secs')]), model: r[ix('model')]||''}); n++; }
+  toast('Imported ' + n + ' check-ins.'); renderHistory();
+};
+
+// ---------- install ----------
+let installEvt = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('installBtn').hidden = false; });
+$('installBtn').onclick = async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch(e){} installEvt = null; $('installBtn').hidden = true; };
+
+applyTheme(); init();
+</script>
+</body>
+</html>

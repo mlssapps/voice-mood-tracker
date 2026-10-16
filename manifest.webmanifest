@@ -1,0 +1,14 @@
+{
+  "name": "Voice Mood Tracker",
+  "short_name": "Voice Mood",
+  "description": "Private voice check-ins that track anxiety and low-mood signals over time, using Kintsugi Health's open voice model on your own device.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#18161D",
+  "theme_color": "#241F30",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
