@@ -134,6 +134,22 @@ table.acc th{font-weight:600;color:var(--muted)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:15px;z-index:10;display:none;max-width:90vw}
 details summary{cursor:pointer;font-weight:600}
 a{color:var(--accent)}
+.opener{background:var(--soft);border-radius:12px;padding:10px 12px;margin:4px 0 6px;font-size:16px}
+.joy{display:flex;align-items:center;gap:14px}
+.joy .face{position:relative;font-size:46px;line-height:1;flex:none;display:inline-block;animation:bounce 1.6s ease-in-out 3}
+.joy .face::after{content:"";position:absolute;inset:-10px;border-radius:50%;background:radial-gradient(circle,rgba(255,120,150,.35),transparent 65%);opacity:0;animation:blush 2.4s ease-in-out 2;z-index:-1}
+.joy b{font-size:20px}
+@keyframes bounce{0%,100%{transform:translateY(0) scale(1)}25%{transform:translateY(-10px) scale(1.06)}50%{transform:translateY(0) scale(.97)}70%{transform:translateY(-4px)}}
+@keyframes blush{0%,100%{opacity:0}50%{opacity:1}}
+@media (prefers-reduced-motion: reduce){.joy .face,.joy .face::after{animation:none}}
+.body .aura{fill:transparent;stroke:var(--line);stroke-width:2;stroke-dasharray:6 6;cursor:pointer;transition:all .3s}
+.body .aura.on{fill:color-mix(in srgb,var(--accent) 16%,transparent);stroke:var(--accent);stroke-dasharray:none;stroke-width:3;filter:drop-shadow(0 0 6px var(--accent))}
+.bodycol{display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}
+.bodycol .linkbtn{font-size:14px;min-height:32px;padding:2px 4px}
+.backupcard{border-left:5px solid var(--accent)}
+.sickrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:15px;color:var(--muted);margin:0 4px 14px}
+.recwarn{color:var(--crit);font-weight:600;font-size:15px;margin:0}
+.vh h3{margin:12px 0 4px}.vh ul{margin:0;padding-left:20px;font-size:15px}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -141,7 +157,7 @@ a{color:var(--accent)}
 <div class="wrap">
   <header>
     <img src="icon-192.png" alt="">
-    <div><h1>Voice Mood Tracker</h1><p class="sub">Your voice, your phone, your patterns.</p></div>
+    <div><h1>Voice Mood Tracker</h1><p class="sub">Your voice, your device, your patterns.</p></div>
   </header>
 
   <nav class="tabs" role="tablist">
@@ -154,7 +170,7 @@ a{color:var(--accent)}
   <section id="pCheck">
     <div class="card" id="setup" hidden>
       <h2>One-time setup</h2>
-      <p>The voice model needs to download once (<b id="mSize">354 MB</b>). After that it lives on this phone and works offline. Wi-Fi is best.</p>
+      <p>The voice model needs to download once (<b id="mSize">354 MB</b>). After that it lives on this device and works offline. Wi-Fi is best.</p>
       <div class="progress" id="dlProg" hidden><div></div></div>
       <div class="status" id="dlStatus"></div>
       <button class="primary wide" id="dlBtn" style="margin-top:8px">Download voice model</button>
@@ -169,7 +185,7 @@ a{color:var(--accent)}
       <p class="prompt" id="promptText"></p>
       <button class="linkbtn" id="newPrompt" type="button">Give me a different idea</button>
       <p class="howto">Talk for 30 to 60 seconds about anything, in your own words. Please don't read something aloud: reading changes how a voice sounds.</p>
-      <p class="hint">Your voice never leaves this phone. Only the scores are saved.</p>
+      <p class="hint">Your voice never leaves this device. Only the scores are saved.</p>
       <button id="installHome" hidden style="margin-top:4px">Install as an app</button>
       <div class="status" id="homeStatus"></div>
     </div>
@@ -183,6 +199,7 @@ a{color:var(--accent)}
         <div class="t"><b id="recSecs">0:00</b><span class="tiny" id="recUnder">30 seconds is enough</span></div>
       </div>
       <div class="meter" aria-hidden="true"><div id="lvl"></div></div>
+      <p class="recwarn" id="recWarn" hidden>I can't hear you. Check that your microphone isn't blocked.</p>
       <button id="stopBtn" style="min-width:160px">Cancel</button>
       <p class="tiny" id="stopHint">Keep going to the 30-second mark (the line at the bottom of the circle).</p>
     </div>
@@ -202,9 +219,11 @@ a{color:var(--accent)}
 
       <details class="fold" id="bodyFold">
         <summary>Where do you feel it? (optional)</summary>
-        <p class="hint">Tap where you notice something in your body. Feelings that often show up there will appear, so it's easier to put a name to it.</p>
+        <p class="hint">Tap where you notice something in your body, or the outline around it for your whole body. Feelings that often show up there will appear, so it's easier to put a name to it.</p>
         <div class="bodywrap">
+          <div class="bodycol">
           <svg class="body" viewBox="0 0 160 300" role="group" aria-label="Body map">
+            <path class="aura" data-r="all" d="M80 0 C112 0 116 30 112 58 C140 66 150 90 148 140 C147 175 144 205 134 212 C122 222 116 212 112 200 L112 296 L48 296 L48 200 C44 212 38 222 26 212 C16 205 13 175 12 140 C10 90 20 66 48 58 C44 30 48 0 80 0 Z"/>
             <ellipse class="rg" data-r="head" cx="80" cy="32" rx="23" ry="27"/>
             <rect class="rg" data-r="throat" x="70" y="60" width="20" height="16" rx="6"/>
             <path class="rg" data-r="chest" d="M52 80 Q80 74 108 80 L110 128 L50 128 Z"/>
@@ -212,8 +231,9 @@ a{color:var(--accent)}
             <g><rect class="rg" data-r="arms" x="26" y="82" width="20" height="96" rx="10"/><rect class="rg" data-r="arms" x="114" y="82" width="20" height="96" rx="10"/><circle class="rg" data-r="arms" cx="36" cy="190" r="11"/><circle class="rg" data-r="arms" cx="124" cy="190" r="11"/></g>
             <g><rect class="rg" data-r="legs" x="55" y="180" width="23" height="112" rx="11"/><rect class="rg" data-r="legs" x="82" y="180" width="23" height="112" rx="11"/></g>
           </svg>
+          <button class="linkbtn" type="button" id="allOver">All over / whole body</button>
+          </div>
           <div class="bodyside">
-            <button class="small" type="button" id="allOver" style="margin-bottom:10px">All over / whole body</button>
             <div id="feelList"><p class="tiny" style="margin:0">Nothing tapped yet.</p></div>
           </div>
         </div>
@@ -235,6 +255,8 @@ a{color:var(--accent)}
       <div class="card helpcard" id="resHelp" hidden></div>
       <div class="card res" id="resAnx"></div>
       <div class="card res" id="resLow"></div>
+      <div class="sickrow" id="sickRow" hidden></div>
+      <div class="card backupcard" id="resBackup" hidden></div>
       <div class="fine">
         <b>Best for tracking your own changes, not for diagnosis.</b> In Kintsugi's published study, the voice model missed about 3 in 10 people who were depressed, and wrongly flagged about 3 in 10 who weren't. A cold, tiredness, or a long day of talking can also shift a reading. Your pattern over many check-ins tells you more than any one result.
         <details><summary>How accuracy differs by group</summary><div class="acctable"></div></details>
@@ -271,7 +293,7 @@ a{color:var(--accent)}
     </div>
     <div class="card">
       <h2>Backup</h2>
-      <p class="hint" style="margin-top:0">Your history is stored only in this app on this phone. Export a copy now and then, or to share with a doctor or therapist. Import brings an exported copy back, for example on a new phone.</p>
+      <p class="hint" style="margin-top:0">Your history is stored only in this app on this device. Export a copy now and then, or to share with a doctor or therapist. Import brings an exported copy back, for example on a new device.</p>
       <div class="row" style="margin-top:10px">
         <button id="exportBtn">Export CSV</button>
         <label class="btn" style="text-align:center;display:flex;align-items:center;justify-content:center">Import CSV<input type="file" id="importIn" accept=".csv,text/csv" hidden></label>
@@ -282,6 +304,17 @@ a{color:var(--accent)}
 
   <!-- ===== ABOUT ===== -->
   <section id="pAbout" hidden>
+    <div class="card">
+      <h2>How to use</h2>
+      <ol style="padding-left:22px;margin:0">
+        <li>Tap <b>Check in</b> and talk for 30–60 seconds about anything. Don't read aloud.</li>
+        <li>While it analyzes, rate how you feel and tap where you feel it in your body (optional). Add a quick note if you like; over time your notes become a short journal alongside your scores.</li>
+        <li>Read your result. <b>What might help</b> offers grounding and recovery ideas. Pick one, or none.</li>
+        <li>Check in regularly. After 5 check-ins, you'll start to see how each day compares with your usual.</li>
+        <li><b>Private by design:</b> your recording is never saved; it's thrown away after scoring. Everything stays on your device and works fully offline. You can export your history as a backup, to move it to a new device, or to share with a health professional. Because it's personal health information, we don't recommend sharing it with anyone else.</li>
+      </ol>
+      <p style="margin:12px 0 0"><b>Why regular check-ins help:</b> noticing where you feel something and putting a name to it builds the skill of reading your own signals. That can be especially helpful for people with alexithymia, who find it hard to identify what they feel.</p>
+    </div>
     <div class="card">
       <h2>What this is</h2>
       <p>A private way to notice patterns in how you're doing. Each check-in records 30 to 60 seconds of you talking, then a voice model listens to <i>how</i> you speak (pitch, rhythm, energy, pauses), not what you say. It gives two signals: <b>anxiety</b> and <b>low mood</b>.</p>
@@ -308,7 +341,7 @@ a{color:var(--accent)}
     <div class="card">
       <h2>Privacy</h2>
       <p class="tiny" id="storeInfo" style="margin:0 0 8px"></p>
-      <p style="margin:0">Your recording is analyzed on this phone and then thrown away. Only the scores, your ratings, and notes are saved, in this app only. Nothing is sent anywhere. The model was downloaded once from this site, and the app checks its fingerprints.</p>
+      <p style="margin:0">Your recording is analyzed on this device and then thrown away. Only the scores, your ratings, and notes are saved, in this app only. Nothing is sent anywhere. The model was downloaded once from this site, and the app checks its fingerprints.</p>
       <p style="margin:8px 0 0"><b>See for yourself:</b> turn on airplane mode and do a check-in. It still works with no internet, because nothing is sent anywhere.</p>
       <p style="margin:8px 0 0">To keep a copy of your history, use <b>Export a copy</b> at the top of the History tab.</p>
     </div>
@@ -329,11 +362,40 @@ a{color:var(--accent)}
         <button id="themeBtn">Theme: Auto</button>
         <button id="installBtn" hidden>Install app</button>
       </div>
+      <div class="row" style="margin-top:10px">
+        <button id="sickSet"></button>
+        <button id="bkSet"></button>
+      </div>
       <details style="margin-top:14px"><summary>Remove the voice model</summary>
         <p class="hint">Frees 354 MB. Your history stays. You'd need to download the model again to check in.</p>
         <button id="rmModel">Remove voice model</button>
       </details>
-      <p class="tiny" style="margin-top:14px">Version 2 · made by MLSS</p>
+      <p class="tiny" style="margin-top:14px">Version 3 · made by MLSS</p>
+    </div>
+    <div class="card vh">
+      <details><summary>Version history</summary>
+        <h3>Version 3</h3><ul>
+          <li>Speech check: if it can't hear enough talking, nothing is scored or saved.</li>
+          <li>"I can't hear you" warning while recording.</li>
+          <li>Charts show times instead of repeating the date for same-day check-ins.</li>
+          <li>"Start here" breath and a cheerful note when things are good.</li>
+          <li>Tap the outline around the body for "whole body."</li>
+          <li>How to use guide, backup reminders, and a choice to leave Sick days out of your usual.</li>
+        </ul>
+        <h3>Version 2</h3><ul>
+          <li>Calm green colors and bigger, easier-to-read text.</li>
+          <li>Talk for 30 to 60 seconds, with a Done button at 30 seconds, and rotating talk ideas.</li>
+          <li>Sliders lock with Set, so scrolling can't bump them.</li>
+          <li>Body map to help name feelings, and "What might help right now" ideas.</li>
+          <li>Results use Kintsugi's own level names, labeled ranges, and your voice score.</li>
+          <li>Care notes for severe or mixed signals, and "trust what you feel" when you feel worse than your voice reads.</li>
+          <li>Accuracy in plain numbers, including how it differs by group.</li>
+          <li>Tap a chart dot for a details panel, select several check-ins to delete, and an easier-to-find Export.</li>
+        </ul>
+        <h3>Version 1</h3><ul>
+          <li>First release: private, on-device voice check-ins using Kintsugi Health's DAM 3.1 model, history charts, and CSV backup.</li>
+        </ul>
+      </details>
     </div>
   </section>
 </div>
@@ -347,6 +409,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const MODEL_CACHE = 'vmt-model-v1';
 const REC_SECS = 60, MIN_SECS = 30, SR = 16000;
+const QUIET = 0.002, SPEECH_MIN = 0.003, MIN_SPEECH = 1/3; // live warning level; speech frame level; share of the recording that must be talking
 // Kintsugi's inference thresholds (config.py): raw score -> level
 const TH = { low: [-0.6699, -0.2908], anx: [-0.7939, -0.2173, 0.1521] };
 // Kintsugi's own level names and questionnaire ranges
@@ -381,7 +444,7 @@ const FEELS = {
 };
 const FAMILY = {}; Object.values(FEELS).forEach(a => a.forEach(([f,k]) => FAMILY[f] = k));
 const NEEDS = {
-  fear:   {t:'Your body may be asking for safety', d:['Take one slow breath, with the out-breath longer than the in-breath.','Name five things you can see around you.','Shake out your hands, or walk a little.','Slow down. Nothing has to be decided this minute.']},
+  fear:   {t:'Your body may be asking for safety', d:['Name five things you can see around you.','Shake out your hands, or walk a little.','Slow down. Nothing has to be decided this minute.']},
   anger:  {t:'Something may need to move or change', d:['Squeeze your fists tight, then let go.','Move: walk, stretch, or push against a wall.','Say what you need, even just to yourself.','Ask yourself: is there a "no" or a boundary here?']},
   sad:    {t:'You may need connection or rest', d:['Rest, or close your eyes for a minute.','Reach out to one person, or spend time with a pet.','Let yourself cry if it comes.','Do one small, kind thing for yourself.']},
   disgust:{t:'Something may need space or processing', d:['Step away from what is bothering you, if you can.','Talk it through or write it down.','Take a small sip of water.','Let yourself not decide anything yet.']},
@@ -453,7 +516,7 @@ async function downloadModel(){
 }
 function setDl(f){ $('dlProg').firstElementChild.style.width = (f*100).toFixed(1)+'%'; }
 $('dlBtn').onclick = downloadModel;
-$('rmModel').onclick = async () => { if (!confirm('Remove the voice model from this phone?')) return; await caches.delete(MODEL_CACHE); session = null; toast('Voice model removed.'); init(); };
+$('rmModel').onclick = async () => { if (!confirm('Remove the voice model from this device?')) return; await caches.delete(MODEL_CACHE); session = null; toast('Voice model removed.'); init(); };
 
 // ---------- model session ----------
 let session = null, sessionP = null, engine = '';
@@ -509,12 +572,13 @@ async function startCheckin(){
   await ac.resume();
   const src = ac.createMediaStreamSource(stream);
   const proc = ac.createScriptProcessor(4096, 1, 1);
-  const parts = []; let n = 0;
+  const parts = []; let n = 0; let lastSound = performance.now();
   proc.onaudioprocess = e => { if (!rec || rec.stopped) return; const d = e.inputBuffer.getChannelData(0); parts.push(new Float32Array(d)); n += d.length;
-    let s = 0; for (let i=0;i<d.length;i++) s += d[i]*d[i]; const rms = Math.sqrt(s/d.length); $('lvl').style.width = Math.min(100, rms*600) + '%'; };
+    let s = 0; for (let i=0;i<d.length;i++) s += d[i]*d[i]; const rms = Math.sqrt(s/d.length); $('lvl').style.width = Math.min(100, rms*600) + '%';
+    if (rms > QUIET) lastSound = performance.now(); };
   const mute = ac.createGain(); mute.gain.value = 0; src.connect(proc); proc.connect(mute); mute.connect(ac.destination);
   rec = {ac, stream, proc, parts, get n(){ return n; }, t0: performance.now(), stopped: false};
-  show('rec'); setStop(false);
+  show('rec'); setStop(false); $('recWarn').hidden = true;
   getSession().catch(()=>{}); // warm up the model while you talk
   const arc = $('ringArc'), C = 502.65;
   rec.timer = setInterval(() => {
@@ -522,6 +586,7 @@ async function startCheckin(){
     $('recSecs').textContent = mmss(Math.min(el, REC_SECS));
     arc.setAttribute('stroke-dashoffset', (C * (1 - Math.min(1, el/REC_SECS))).toFixed(1));
     setStop(el >= MIN_SECS);
+    $('recWarn').hidden = performance.now() - lastSound < 5000;
     if (el >= REC_SECS) finishRecording(false);
   }, 200);
 }
@@ -540,7 +605,18 @@ async function finishRecording(early){
   if (secs < MIN_SECS - 0.5) { showHome(); $('homeStatus').textContent = 'Check-in cancelled. It needs at least 30 seconds of talking.'; return; }
   const useSecs = secs >= REC_SECS - 0.5 ? REC_SECS : MIN_SECS;
   const audio = await resample(raw, rate, useSecs);
-  startAnalysis(audio, useSecs);
+  const speech = speechSeconds(audio);
+  if (speech < useSecs * MIN_SPEECH) { showHome(); $('homeStatus').textContent = "I couldn't hear enough talking to read your voice, so nothing was saved. Try again a little closer to the microphone, somewhere quieter."; return; }
+  startAnalysis(audio, useSecs, speech);
+}
+// how many seconds actually sound like talking: 20 ms frames that are clearly louder than the room's background
+function speechSeconds(a){
+  const F = SR * 0.02, r = [];
+  for (let i = 0; i + F <= a.length; i += F){ let s = 0; for (let j = i; j < i + F; j++) s += a[j]*a[j]; r.push(Math.sqrt(s / F)); }
+  if (!r.length) return 0;
+  const floor = [...r].sort((x,y)=>x-y)[Math.floor(r.length * 0.1)];
+  let n = 0; for (const v of r) if (v > SPEECH_MIN && v > floor * 3) n++;
+  return n * 0.02;
 }
 async function resample(x, rate, secs){
   const len = Math.round(secs * SR);
@@ -554,7 +630,7 @@ $('stopBtn').onclick = () => finishRecording(true);
 
 // ---------- analysis + rating ----------
 let pending = null; // {analysis: Promise, rating: {...}|null, secs}
-function startAnalysis(audio, secs){
+function startAnalysis(audio, secs, speech){
   resetRating(); show('rate'); $('waitNote').hidden = true; $('rateHead').textContent = 'While that runs: how do you feel?';
   const prog = f => $('anProg').firstElementChild.style.width = (f*100).toFixed(0)+'%';
   const status = m => $('anStatus').textContent = m;
@@ -577,7 +653,7 @@ function startAnalysis(audio, secs){
       return {low: d[0], anx: d[1]};
     } finally { clearInterval(tick); }
   })();
-  pending = {analysis, rating: null, secs, time: Date.now()};
+  pending = {analysis, rating: null, secs, speech, time: Date.now()};
   analysis.catch(err => { status('Something went wrong: ' + (err.message || err) + '. Your recording was not saved.'); });
 }
 // sliders: Set locks the value so scrolling can't change it; Change unlocks
@@ -590,8 +666,8 @@ function lockSlider(id, locked){ $(id).disabled = locked; $(id+'B').textContent 
 // body map
 let bodySel = new Set(), feelSel = new Set();
 function renderFeels(){
-  document.querySelectorAll('.body .rg[data-r]').forEach(el => el.classList.toggle('on', bodySel.has(el.dataset.r)));
-  $('allOver').classList.toggle('primary', bodySel.has('all'));
+  document.querySelectorAll('.body [data-r]').forEach(el => el.classList.toggle('on', bodySel.has(el.dataset.r)));
+  $('allOver').style.fontWeight = bodySel.has('all') ? '700' : '';
   const fl = $('feelList'); fl.innerHTML = '';
   if (!bodySel.size) { fl.innerHTML = '<p class="tiny" style="margin:0">Nothing tapped yet.</p>'; return; }
   [...bodySel].forEach(r => { const g = document.createElement('div'); g.className = 'fgroup';
@@ -603,7 +679,7 @@ function renderFeels(){
 function toggleRegion(r){ bodySel.has(r) ? bodySel.delete(r) : bodySel.add(r);
   // drop chosen feelings that no longer belong to a selected area
   const ok = new Set(); bodySel.forEach(x => FEELS[x].forEach(([f]) => ok.add(f))); feelSel.forEach(f => { if (!ok.has(f)) feelSel.delete(f); }); renderFeels(); }
-document.querySelectorAll('.body .rg[data-r]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); toggleRegion(el.dataset.r); }));
+document.querySelectorAll('.body [data-r]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); toggleRegion(el.dataset.r); }));
 $('allOver').onclick = () => toggleRegion('all');
 
 function resetRating(){ ['sAnx','sLow'].forEach(id => { $(id).value = 0; rated[id] = false; $(id+'V').textContent = ''; lockSlider(id, false); $(id+'B').classList.remove('primary'); }); $('note').value = '';
@@ -619,7 +695,7 @@ async function submitRating(skip){
   $('saveRate').disabled = true; $('skipRate').disabled = true; $('waitNote').hidden = false;
   let r; try { r = await pending.analysis; } catch (e) { return; }
   const prev = await allCheckins();
-  const c = {id: 'c' + pending.time, time: pending.time, secs: pending.secs, model: 'DAM 3.1 fp16',
+  const c = {id: 'c' + pending.time, time: pending.time, secs: pending.secs, speech: pending.speech != null ? +pending.speech.toFixed(1) : null, model: 'DAM 3.1 fp16',
     anx: +r.anx.toFixed(4), low: +r.low.toFixed(4), anxLevel: level(r.anx, TH.anx), lowLevel: level(r.low, TH.low), ...pending.rating};
   await saveCheckin(c); pending = null; histCache = null;
   showResult(c, prev);
@@ -629,6 +705,32 @@ $('skipRate').onclick = () => submitRating(true);
 
 // ---------- results ----------
 let lastResult = null;
+// settings kept on this device
+const pref = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch(e){ return d; } };
+const setPref = (k, v) => { try { localStorage.setItem(k, v); } catch(e){} };
+const sickOut = () => pref('vmt-sick-out', '1') === '1';
+const isSick = c => (c.tags||[]).includes('Sick');
+const usualPool = prev => sickOut() ? prev.filter(p => !isSick(p)) : prev;
+function renderSickRow(){
+  const el = $('sickRow'); el.hidden = false;
+  el.innerHTML = `<span>${sickOut() ? 'Your usual leaves out days tagged Sick.' : 'Your usual includes days tagged Sick.'}</span><button class="small" id="sickTog">${sickOut() ? 'Include them' : 'Leave them out'}</button>`;
+  $('sickTog').onclick = () => { setPref('vmt-sick-out', sickOut() ? '0' : '1'); updateSickSetting(); if (lastResult) showResult(...lastResult); };
+}
+function updateSickSetting(){ const b = $('sickSet'); if (b) b.textContent = 'Sick days in my usual: ' + (sickOut() ? 'Left out' : 'Included'); }
+async function showBackupNudge(){
+  const card = $('resBackup'); card.hidden = true;
+  if (pref('vmt-backup-remind', '1') !== '1') return;
+  const all = await allCheckins(); const next = +pref('vmt-backup-next', '10');
+  if (all.length < next) return;
+  card.innerHTML = `<h3>Keep a backup?</h3><p style="margin:0">Your history lives only in this app on this device. If browser data gets cleared, or you switch devices, it's gone for good. A backup copy keeps it safe. Export one now?</p>
+    <div class="row" style="margin-top:10px"><button class="primary small" id="bkNow">Export now</button><button class="small" id="bkLater">Not now</button></div>
+    <button class="linkbtn" id="bkOff" style="padding-left:0;margin-top:4px">Turn off backup reminders</button>`;
+  card.hidden = false;
+  $('bkNow').onclick = async () => { await exportCSV(); card.hidden = true; };
+  $('bkLater').onclick = () => { setPref('vmt-backup-next', String(all.length + 10)); card.hidden = true; };
+  $('bkOff').onclick = () => { setPref('vmt-backup-remind', '0'); updateBackupSetting(); card.hidden = true; toast('Backup reminders off. You can turn them back on in About.'); };
+}
+function updateBackupSetting(){ const b = $('bkSet'); if (b) b.textContent = 'Backup reminders: ' + (pref('vmt-backup-remind', '1') === '1' ? 'On' : 'Off'); }
 function usualText(v, prevVals){
   if (prevVals.length < 5) return `Your personal average appears after 5 check-ins (${prevVals.length} so far).`;
   const m = prevVals.reduce((a,b)=>a+b,0)/prevVals.length; const sd = Math.sqrt(prevVals.reduce((a,b)=>a+(b-m)*(b-m),0)/prevVals.length) || 0.05;
@@ -652,8 +754,9 @@ function resultCard(el, key, title, v, lv, prevVals){
 const HOTLINE = `<p style="margin:8px 0 0">If you're struggling or thinking about hurting yourself, call or text <b>988</b> (US), or text <b>HOME</b> to <b>741741</b>. If you're in danger right now, call 911.</p>`;
 function showResult(c, prev){
   lastResult = [c, prev];
-  resultCard($('resAnx'), 'anx', 'Anxiety signals', c.anx, c.anxLevel, prev.map(p=>p.anx));
-  resultCard($('resLow'), 'low', 'Low-mood signals', c.low, c.lowLevel, prev.map(p=>p.low));
+  const pool = usualPool(prev);
+  resultCard($('resAnx'), 'anx', 'Anxiety signals', c.anx, c.anxLevel, pool.map(p=>p.anx));
+  resultCard($('resLow'), 'low', 'Low-mood signals', c.low, c.lowLevel, pool.map(p=>p.low));
   // care note for the top range of either signal, strongest when both are raised together
   const sevLow = c.lowLevel === 2, sevAnx = c.anxLevel === 3, mixed = (sevLow && c.anxLevel >= 1) || (sevAnx && c.lowLevel >= 1);
   let care = '';
@@ -672,11 +775,23 @@ function showResult(c, prev){
   if (c.anxLevel >= 1 || (c.selfAnx||0) >= 5) add('fear');
   if (c.lowLevel >= 1 || (c.selfLow||0) >= 5) add('sad');
   (c.feelings||[]).forEach(f => FAMILY[f] && add(FAMILY[f]));
-  const nonJoy = fams.filter(k => k !== 'joy'); const show2 = (nonJoy.length ? nonJoy : fams).slice(0, 2);
-  $('resHelp').hidden = !show2.length;
-  if (show2.length) $('resHelp').innerHTML = `<h2>What might help right now</h2>` + (c.feelings&&c.feelings.length ? `<p class="tiny" style="margin:0 0 6px">You noticed: ${esc(c.feelings.join(', '))}</p>` : '') +
-    show2.map(k => `<h3 style="margin-top:10px">${NEEDS[k].t}</h3><ul>${NEEDS[k].d.map(x=>`<li>${x}</li>`).join('')}</ul>`).join('') +
-    `<p class="tiny" style="margin:8px 0 0">Ideas only. Pick one, or none. Any breath you slow down counts.</p>`;
+  const needs = fams.filter(k => k !== 'joy').slice(0, 2);
+  const steady = !fams.length && c.anxLevel === 0 && c.lowLevel === 0 && (c.selfAnx == null || c.selfAnx <= 3) && (c.selfLow == null || c.selfLow <= 3);
+  let help = '';
+  if (needs.length) {
+    help = `<h2>What might help right now</h2>` + (c.feelings&&c.feelings.length ? `<p class="tiny" style="margin:0 0 6px">You noticed: ${esc(c.feelings.join(', '))}</p>` : '') +
+      `<p class="opener"><b>Start here:</b> take one slow breath, with the out-breath longer than the in-breath. Or begin with one of the ideas below if you like it better.</p>` +
+      needs.map(k => `<h3 style="margin-top:10px">${NEEDS[k].t}</h3><ul>${NEEDS[k].d.map(x=>`<li>${x}</li>`).join('')}</ul>`).join('') +
+      `<p class="tiny" style="margin:8px 0 0">Ideas only. Pick one, or none.</p>`;
+  } else if (fams.includes('joy') || steady) {
+    const line = fams.includes('joy') ? "Congratulations! I'm so happy for you" : 'You seem to be in a steady place today';
+    help = `<div class="joy"><span class="face" aria-hidden="true">😊</span><div><b>${line}</b><p class="tiny" style="margin:2px 0 0">${NEEDS.joy.t}.</p></div></div>` +
+      `<ul>${NEEDS.joy.d.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+  }
+  $('resHelp').hidden = !help; $('resHelp').innerHTML = help;
+  // gentle backup reminder
+  showBackupNudge();
+  renderSickRow();
   show('result');
 }
 $('doneBtn').onclick = () => { lastResult = null; showHome(); };
@@ -690,6 +805,7 @@ async function init(){ if (await modelCached()) showHome(); else { show('setup')
 let histCache = null, selMode = false, openPt = null;
 const fmtDate = t => new Date(t).toLocaleString(undefined, {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
 const fmtDay = t => new Date(t).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+const fmtTime = t => new Date(t).toLocaleTimeString(undefined, {hour:'numeric', minute:'2-digit'});
 function selfTxt(v){ return v != null ? ` <span class="tiny">(you: ${v}/10)</span>` : ''; }
 async function renderHistory(){
   const all = histCache = await allCheckins();
@@ -742,7 +858,8 @@ function drawChart(svg, all, key, colVar){
   ticks.forEach(i => { const anchor = (n === 1 || i === 0) ? 'start' : 'middle';
     const xx = n === 1 ? L : i === 0 ? L : x(i);
     s += `<line x1="${x(i).toFixed(1)}" y1="${H-B}" x2="${x(i).toFixed(1)}" y2="${H-B+5}" stroke="${line}" stroke-width="2"/>`;
-    s += `<text x="${xx.toFixed(1)}" y="${H-8}" font-size="17" text-anchor="${anchor}" fill="${ink}">${fmtDay(data[i].time)}</text>`; });
+    const prevTick = ticks[ticks.indexOf(i) - 1], same = prevTick != null && fmtDay(data[prevTick].time) === fmtDay(data[i].time);
+    s += `<text x="${xx.toFixed(1)}" y="${H-8}" font-size="17" text-anchor="${anchor}" fill="${ink}">${same ? fmtTime(data[i].time) : fmtDay(data[i].time)}</text>`; });
   if (n > 1) s += `<polyline fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="${data.map((d,i)=>x(i).toFixed(1)+','+y(d[key]).toFixed(1)).join(' ')}"/>`;
   data.forEach((d,i) => { const on = d.id === openPt;
     s += `<circle cx="${x(i).toFixed(1)}" cy="${y(d[key]).toFixed(1)}" r="${on?9:6.5}" fill="${col}" stroke="${on?sel:panel}" stroke-width="${on?3:2}"/>`; });
@@ -770,14 +887,14 @@ function renderDetail(){
 function highlightRow(){ document.querySelectorAll('#list .item').forEach(el => el.classList.toggle('hl', el.id === 'row-' + openPt)); }
 
 // ---------- CSV ----------
-const COLS = ['time','date','anx','anxLevel','low','lowLevel','selfAnx','selfLow','body','feelings','tags','note','secs','model'];
+const COLS = ['time','date','anx','anxLevel','low','lowLevel','selfAnx','selfLow','body','feelings','tags','note','secs','speech','model'];
 const q = v => { v = v==null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; };
 async function exportCSV(){
   const all = await allCheckins(); if (!all.length) { toast('No check-ins to export yet.'); return; }
   const rows = [COLS.join(',')].concat(all.map(c => COLS.map(k => k==='date' ? new Date(c.time).toISOString() : (k==='tags'||k==='feelings'||k==='body') ? q((c[k]||[]).join('; ')) : k==='anxLevel' ? q(LEVELS.anx[c.anxLevel].n) : k==='lowLevel' ? q(LEVELS.low[c.lowLevel].n) : q(c[k])).join(',')));
   const blob = new Blob([rows.join('\n')], {type:'text/csv'}); const a = $('exportLink');
   a.href = URL.createObjectURL(blob); a.download = 'voice-mood-' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
-  toast('Exported ' + all.length + ' check-ins.');
+  toast('Exported ' + all.length + ' check-ins.'); setPref('vmt-backup-next', String(all.length + 10));
 }
 $('exportBtn').onclick = exportCSV; $('exportTop').onclick = exportCSV;
 function parseCSV(t){ const rows=[]; let row=[], f='', i=0, inq=false; while (i<t.length){ const ch=t[i];
@@ -792,7 +909,7 @@ $('importIn').onchange = async e => {
   for (const r of rows){ if (r.length < 3) continue; const time = +r[ix('time')]; if (!time) continue;
     const anx = +r[ix('anx')], low = +r[ix('low')]; const L = k => ix(k) < 0 ? [] : (r[ix(k)]||'').split(';').map(s=>s.trim()).filter(Boolean);
     await saveCheckin({id:'c'+time, time, anx, low, anxLevel: level(anx, TH.anx), lowLevel: level(low, TH.low), selfAnx: num(r[ix('selfAnx')]), selfLow: num(r[ix('selfLow')]),
-      tags: L('tags'), feelings: L('feelings'), body: L('body'), note: r[ix('note')]||'', secs: num(r[ix('secs')]), model: r[ix('model')]||''}); n++; }
+      tags: L('tags'), feelings: L('feelings'), body: L('body'), note: r[ix('note')]||'', secs: num(r[ix('secs')]), speech: ix('speech') < 0 ? null : num(r[ix('speech')]), model: r[ix('model')]||''}); n++; }
   toast('Imported ' + n + ' check-ins.'); renderHistory();
 };
 
@@ -801,15 +918,18 @@ let installEvt = null;
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('installBtn').hidden = false; $('installHome').hidden = false; });
 $('installBtn').onclick = $('installHome').onclick = async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch(e){} installEvt = null; $('installBtn').hidden = true; $('installHome').hidden = true; };
 addEventListener('appinstalled', () => { $('installBtn').hidden = true; $('installHome').hidden = true; });
-// show what is stored on this phone
+// show what is stored on this device
 async function storeInfo(){
   try {
     const n = (await allCheckins()).length, has = await modelCached();
     let used = ''; if (navigator.storage && navigator.storage.estimate){ const e = await navigator.storage.estimate(); used = ` · about ${Math.round((e.usage||0)/1e6)} MB used in total`; }
-    $('storeInfo').textContent = `Stored on this phone: ${has ? 'the voice model (354 MB)' : 'no voice model yet'} and ${n} check-in${n===1?'':'s'}${used}. Nothing is stored anywhere else.`;
+    $('storeInfo').textContent = `Stored on this device: ${has ? 'the voice model (354 MB)' : 'no voice model yet'} and ${n} check-in${n===1?'':'s'}${used}. Nothing is stored anywhere else.`;
   } catch(e){}
 }
 $('tabAbout').addEventListener('click', storeInfo);
+$('sickSet').onclick = () => { setPref('vmt-sick-out', sickOut() ? '0' : '1'); updateSickSetting(); };
+$('bkSet').onclick = () => { setPref('vmt-backup-remind', pref('vmt-backup-remind', '1') === '1' ? '0' : '1'); updateBackupSetting(); };
+updateSickSetting(); updateBackupSetting();
 
 setPrompt(false); applyTheme(); init();
 </script>
