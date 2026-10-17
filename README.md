@@ -6,7 +6,7 @@ Private one-minute voice check-ins that track **anxiety** and **low-mood** signa
 
 ## With gratitude to Kintsugi Health
 
-This app runs the **DAM 3.1 Depression and Anxiety Model** by [Kintsugi Health](https://kintsugihealth.com), released openly under the Apache License 2.0 after years of work. Thank you to the team and to everyone whose voices made it possible.
+This app runs the **DAM 3.1 Depression and Anxiety Model** by [Kintsugi Health] (https://kintsugihealth.com), released openly under the Apache License 2.0 after years of work. Thank you to the team and to everyone whose voices made it possible.
 
 - Original model: KintsugiHealth/dam (a copy is kept at [mlssapps/voice-model](https://github.com/mlssapps/voice-model))
 - Changes made here: the LoRA adapter was merged into the weights and the model was exported to ONNX and stored in half precision (float16), split into 24 MB parts (`dam-fp16.part00`–`part14`). Scores match the original PyTorch model within 0.001. The audio preprocessing (`featex.js`) is a JavaScript port of the original `featex.py` and Whisper's log-mel features, matching within 0.00005.
