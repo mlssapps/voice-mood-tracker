@@ -157,7 +157,7 @@ a{color:var(--accent)}
 <div class="wrap">
   <header>
     <img src="icon-192.png" alt="">
-    <div><h1>Voice Mood Tracker</h1><p class="sub">Your voice, your device, your patterns.</p><p class="tiny" style="margin:0">Version 4</p></div>
+    <div><h1>Voice Mood Tracker</h1><p class="sub">Your voice, your device, your patterns.</p><p class="tiny" style="margin:0">Version 5</p></div>
   </header>
 
   <nav class="tabs" role="tablist">
@@ -232,11 +232,12 @@ a{color:var(--accent)}
       <div class="card carecard" id="resCare" hidden></div>
       <div class="card trustcard" id="resTrust" hidden></div>
       <div class="card helpcard" id="resHelp" hidden></div>
+      <p class="hint" id="bodyOnlyNote" hidden style="margin:0 4px 14px">Body check-in: no voice reading this time. It's saved in your history with what you noticed.</p>
       <div class="card res" id="resAnx"></div>
       <div class="card res" id="resLow"></div>
       <div class="sickrow" id="sickRow" hidden></div>
       <div class="card backupcard" id="resBackup" hidden></div>
-      <div class="fine">
+      <div class="fine" id="voiceFine">
         <b>Best for tracking your own changes, not for diagnosis.</b> In Kintsugi's published study, the voice model missed about 3 in 10 people who were depressed, and wrongly flagged about 3 in 10 who weren't. A cold, tiredness, or a long day of talking can also shift a reading. Your pattern over many check-ins tells you more than any one result.
         <details><summary>How accuracy differs by group</summary><div class="acctable"></div></details>
       </div>
@@ -250,19 +251,22 @@ a{color:var(--accent)}
           <div class="bodycol">
           <svg class="body" viewBox="0 0 160 300" role="group" aria-label="Body map">
             <path class="aura" data-r="all" d="M80 0 C112 0 116 30 112 58 C140 66 150 90 148 140 C147 175 144 205 134 212 C122 222 116 212 112 200 L112 296 L48 296 L48 200 C44 212 38 222 26 212 C16 205 13 175 12 140 C10 90 20 66 48 58 C44 30 48 0 80 0 Z"/>
-            <ellipse class="rg" data-r="head" cx="80" cy="32" rx="23" ry="27"/>
-            <rect class="rg" data-r="throat" x="70" y="60" width="20" height="16" rx="6"/>
-            <path class="rg" data-r="chest" d="M52 80 Q80 74 108 80 L110 128 L50 128 Z"/>
+            <path class="rg" data-r="chest" d="M52 88 Q80 84 108 88 L110 128 L50 128 Z"/>
             <path class="rg" data-r="stomach" d="M50 131 L110 131 L106 176 L54 176 Z"/>
             <g><rect class="rg" data-r="arms" x="26" y="82" width="20" height="96" rx="10"/><rect class="rg" data-r="arms" x="114" y="82" width="20" height="96" rx="10"/><circle class="rg" data-r="arms" cx="36" cy="190" r="11"/><circle class="rg" data-r="arms" cx="124" cy="190" r="11"/></g>
             <g><rect class="rg" data-r="legs" x="55" y="180" width="23" height="112" rx="11"/><rect class="rg" data-r="legs" x="82" y="180" width="23" height="112" rx="11"/></g>
+            <path class="rg" data-r="neck" d="M66 64 L94 64 L98 72 Q120 74 134 84 L134 96 Q118 88 108 87 Q80 82 52 87 Q42 88 26 96 L26 84 Q40 74 62 72 Z"/>
+            <rect class="rg" data-r="throat" x="72" y="64" width="16" height="17" rx="6"/>
+            <ellipse class="rg" data-r="head" cx="80" cy="32" rx="23" ry="27"/>
           </svg>
           <button class="linkbtn" type="button" id="allOver">All over / whole body</button>
           </div>
           <div class="bodyside">
-            <div id="feelList"><p class="tiny" style="margin:0">Nothing tapped yet.</p></div>
+                        <div id="feelList"><p class="tiny" style="margin:0">Nothing tapped yet.</p></div>
           </div>
         </div>
+        <div class="card carecard" id="urgentTop" hidden style="margin:12px 0 0"></div>
+        <button class="wide" id="bodyOnlyBtn" hidden style="margin-top:12px">Get ideas without recording</button>
     </div>
   </section>
 
@@ -370,10 +374,16 @@ a{color:var(--accent)}
         <p class="hint">Frees 354 MB. Your history stays. You'd need to download the model again to check in.</p>
         <button id="rmModel">Remove voice model</button>
       </details>
-      <p class="tiny" style="margin-top:14px">Version 4 · Made by MLSS · built with Claude by Anthropic</p>
+      <p class="tiny" style="margin-top:14px">Version 5 · Made by MLSS · built with Claude by Anthropic</p>
     </div>
     <div class="card vh">
       <details><summary>Version history</summary>
+        <h3>Version 5</h3><ul>
+          <li>"Get ideas without recording": a body-only check-in from the body map.</li>
+          <li>New Neck &amp; shoulders area, and new head and throat sensations, with a "Your body may need care" group and a gentle neck release.</li>
+          <li>"Hard to get words out," with no-pressure ideas.</li>
+          <li>Emergency signs show a calm "Call 911 now" note right away; new, severe pain shows "get checked soon."</li>
+        </ul>
         <h3>Version 4</h3><ul>
           <li>The body map is open and stays with you through the whole check-in: home, recording, and rating.</li>
           <li>"Start here" breath and a rotating "today's practice" on good days too.</li>
@@ -437,23 +447,43 @@ const ACC_HTML = `<table class="acc"><tr><th>Group</th><th>Missed<br><span style
 document.querySelectorAll('.acctable').forEach(el => el.innerHTML = ACC_HTML);
 
 // body map: regions -> feelings that often show up there; each feeling belongs to a "need" family
-const REGIONS = {head:'Head', throat:'Throat', chest:'Chest', stomach:'Stomach', arms:'Arms & hands', legs:'Legs', all:'All over'};
+const REGIONS = {head:'Head', neck:'Neck & shoulders', throat:'Throat', chest:'Chest', stomach:'Stomach', arms:'Arms & hands', legs:'Legs', all:'All over'};
 const FEELS = {
-  head:   [['Worried','fear'],['Overwhelmed','fear'],['Angry','anger'],['Ashamed','sad'],['Foggy','sad'],['Happy','joy']],
-  throat: [['Choked up','sad'],['Scared','fear'],['Holding something back','anger'],['Disgusted','disgust']],
-  chest:  [['Anxious','fear'],['Panicky','fear'],['Angry','anger'],['Heavy-hearted','sad'],['Loving','joy'],['Proud','joy']],
+  head:   [['Worried','fear'],['Overwhelmed','fear'],['Angry','anger'],['Ashamed','sad'],['Foggy','sad'],['Happy','joy'],
+           ['Spacey / disoriented','fear'],['Electric-shock feelings','body'],['Teeth clenched','body'],['Ears ringing','body'],['Vertigo','body'],['Dry mouth','body'],
+           ['Worst headache of my life','e911'],['Sudden slurred speech','e911']],
+  neck:   [['Tense','body'],['Sore','body'],['Muscle spasms','body'],['Sharp pain','body']],
+  throat: [['Choked up','sad'],['Scared','fear'],['Holding something back','anger'],['Disgusted','disgust'],['Hard to get words out','words'],['Trouble breathing','e911']],
+  chest:  [['Anxious','fear'],['Panicky','fear'],['Angry','anger'],['Heavy-hearted','sad'],['Loving','joy'],['Proud','joy'],['Chest pain or pressure','e911'],['Trouble breathing','e911']],
   stomach:[['Nervous','fear'],['Dread','fear'],['Disgusted','disgust'],['Uneasy','disgust']],
   arms:   [['Tense','anger'],['Fidgety','fear'],['Frustrated','anger'],['Excited','joy']],
   legs:   [['Restless','fear'],['Want to get away','fear'],['Heavy','sad'],['Energized','joy']],
-  all:    [['Numb','sad'],['Exhausted','sad'],['Shaky','fear'],['Calm','joy'],['Warm and light','joy']]
+  all:    [['Numb','sad'],['Exhausted','sad'],['Shaky','fear'],['Calm','joy'],['Warm and light','joy'],['Sudden numbness or weakness','e911'],["New, severe pain that won't go away",'soon']]
 };
+const URGENT_911 = `<h3>Call 911 now</h3><p style="margin:0">These can be signs of a medical emergency. Don't drive yourself: paramedics can start care on the way.</p><p style="margin:6px 0 0"><a href="tel:911"><b>Call 911</b></a></p>`;
+const URGENT_SOON = `<h3>Your body is giving you a strong warning</h3><p style="margin:0">New pain that's severe or won't let up is worth listening to; pushing through it could make things worse. Be gentle with yourself, and do what feels soothing until you get it checked: call your doctor or an urgent care today. If it's getting worse fast, go to the ER or call 911.</p>`;
+// a feeling's group depends on where it was tapped ("Tense" in the arms vs. the neck)
+function famsFromSel(){ const out = []; bodySel.forEach(r => FEELS[r].forEach(([f,k]) => { if (feelSel.has(f) && !out.includes(k)) out.push(k); })); return out; }
+// extra lines for specific feelings
+const SPECIFIC = {
+  'Teeth clenched': 'Let your tongue rest on the roof of your mouth and your jaw go slack.',
+  'Ears ringing': 'Lower the noise around you if you can, and give your ears some quiet.',
+  'Vertigo': 'Sit or lie down until it passes, and move slowly when you get up.',
+  'Dry mouth': 'Sip water. Some medications and anxiety can both cause this.',
+  'Electric-shock feelings': 'These "brain zaps" can happen when stopping or changing some medications, especially antidepressants. Let your prescriber know.',
+  'Spacey / disoriented': 'Press your feet into the floor and name where you are and what day it is.'
+};
+const FEELS_FAM = (f, c) => { for (const r of (c.body||[])) { const hit = (FEELS[r]||[]).find(([x]) => x === f); if (hit) return hit[1]; } return FAMILY[f]; };
+const NECK_RELEASE = '<b>Gentle neck release:</b> Slowly turn your head side to side, then nod down and up, staying in a comfortable range. Then roll your chin in a half circle across your chest, from one shoulder to the other, in both directions. Pause at each end and breathe out slowly, longer than the breath in. Stop if anything hurts or makes you dizzy.';
 const FAMILY = {}; Object.values(FEELS).forEach(a => a.forEach(([f,k]) => FAMILY[f] = k));
 const NEEDS = {
   fear:   {t:'Your body may be asking for safety', d:['Name five things you can see around you.','Shake out your hands, or walk a little.','Slow down. Nothing has to be decided this minute.']},
   anger:  {t:'Something may need to move or change', d:['Squeeze your fists tight, then let go.','Move: walk, stretch, or push against a wall.','Say what you need, even just to yourself.','Ask yourself: is there a "no" or a boundary here?']},
   sad:    {t:'You may need connection or rest', d:['Rest, or close your eyes for a minute.','Reach out to one person, or spend time with a pet.','Let yourself cry if it comes.','Do one small, kind thing for yourself.']},
   disgust:{t:'Something may need space or processing', d:['Step away from what is bothering you, if you can.','Talk it through or write it down.','Take a small sip of water.','Let yourself not decide anything yet.']},
-  joy:    {t:'Your needs may be met right now', d:['Pause and savor it.','Share it with someone.','Notice where in your body it lives.']}
+  joy:    {t:'Your needs may be met right now', d:['Pause and savor it.','Share it with someone.','Notice where in your body it lives.']},
+  body:   {t:'Your body may need care', d:['Roll your shoulders slowly, or let them drop.','Try warmth: a heating pad, warm shower, or warm drink.','Sip some water.','Rest in a comfortable position.','If it\'s new, strong, or keeps coming back, check with a doctor.']},
+  words:  {t:'Words can wait', d:['It\'s okay not to talk right now.','Touch something comforting: a soft blanket, a pet, a smooth stone.','Typing, writing, or sitting quietly all count.','Lower what\'s coming in: dim lights, headphones, a quiet spot.','The voice check-in can wait until words come back easier.']}
 };
 
 const PRACTICES = ["Name one thing you can hear right now.", "Notice where the good feeling sits in your body.", "Name three colors you can see from where you are.",
@@ -677,6 +707,12 @@ function renderFeels(){
   document.querySelectorAll('.body [data-r]').forEach(el => el.classList.toggle('on', bodySel.has(el.dataset.r)));
   $('allOver').style.fontWeight = bodySel.has('all') ? '700' : '';
   const fl = $('feelList'); fl.innerHTML = '';
+  const fams = famsFromSel(), u = $('urgentTop'), wasHidden = u.hidden;
+  if (fams.includes('e911')) { u.innerHTML = URGENT_911; u.hidden = false; u.style.borderLeftColor = ''; }
+  else if (fams.includes('soon')) { u.innerHTML = URGENT_SOON; u.hidden = false; u.style.borderLeftColor = 'var(--warn)'; }
+  else u.hidden = true;
+  if (wasHidden && !u.hidden) setTimeout(() => u.scrollIntoView({behavior:'smooth', block:'center'}), 50);
+  $('bodyOnlyBtn').hidden = !(feelSel.size && !$('home').hidden);
   if (!bodySel.size) { fl.innerHTML = '<p class="tiny" style="margin:0">Nothing tapped yet.</p>'; return; }
   [...bodySel].forEach(r => { const g = document.createElement('div'); g.className = 'fgroup';
     g.innerHTML = `<b>${REGIONS[r]}</b><div class="chips"></div>`;
@@ -696,7 +732,7 @@ function resetRating(){ ['sAnx','sLow'].forEach(id => { $(id).value = 0; rated[i
 async function submitRating(skip){
   if (!pending) return;
   const tags = [...$('tags').querySelectorAll('.on')].map(b => b.textContent);
-  const extra = {tags, note: $('note').value.trim(), body: [...bodySel], feelings: [...feelSel]};
+  const extra = {tags, note: $('note').value.trim(), body: [...bodySel], feelings: [...feelSel], needs: famsFromSel()};
   pending.rating = skip ? {selfAnx:null, selfLow:null, ...extra} :
     {selfAnx: rated.sAnx ? +$('sAnx').value : null, selfLow: rated.sLow ? +$('sLow').value : null, ...extra};
   $('saveRate').disabled = true; $('skipRate').disabled = true; $('waitNote').hidden = false;
@@ -717,7 +753,7 @@ const pref = (k, d) => { try { const v = localStorage.getItem(k); return v == nu
 const setPref = (k, v) => { try { localStorage.setItem(k, v); } catch(e){} };
 const sickOut = () => pref('vmt-sick-out', '1') === '1';
 const isSick = c => (c.tags||[]).includes('Sick');
-const usualPool = prev => sickOut() ? prev.filter(p => !isSick(p)) : prev;
+const usualPool = prev => { const v = prev.filter(p => p.anx != null); return sickOut() ? v.filter(p => !isSick(p)) : v; };
 function renderSickRow(){
   const el = $('sickRow'); el.hidden = false;
   el.innerHTML = `<span>${sickOut() ? 'Your usual leaves out days tagged Sick.' : 'Your usual includes days tagged Sick.'}</span><button class="small" id="sickTog">${sickOut() ? 'Include them' : 'Leave them out'}</button>`;
@@ -761,16 +797,21 @@ function resultCard(el, key, title, v, lv, prevVals, left){
 const HOTLINE = `<p style="margin:8px 0 0">If you're struggling or thinking about hurting yourself, call or text <b>988</b> (US), or text <b>HOME</b> to <b>741741</b>. If you're in danger right now, call 911.</p>`;
 function showResult(c, prev){
   lastResult = [c, prev];
-  const pool = usualPool(prev), left = prev.length - pool.length;
-  resultCard($('resAnx'), 'anx', 'Anxiety signals', c.anx, c.anxLevel, pool.map(p=>p.anx), left);
-  resultCard($('resLow'), 'low', 'Low-mood signals', c.low, c.lowLevel, pool.map(p=>p.low), left);
+  const voice = c.anx != null; $('bodyOnlyNote').hidden = voice;
+  ['resAnx','resLow'].forEach(id => $(id).hidden = !voice); $('voiceFine').hidden = !voice;
+  const pool = usualPool(prev), left = prev.filter(p => p.anx != null).length - pool.length;
+  if (voice) { resultCard($('resAnx'), 'anx', 'Anxiety signals', c.anx, c.anxLevel, pool.map(p=>p.anx), left);
+  resultCard($('resLow'), 'low', 'Low-mood signals', c.low, c.lowLevel, pool.map(p=>p.low), left); }
   // care note for the top range of either signal, strongest when both are raised together
   const sevLow = c.lowLevel === 2, sevAnx = c.anxLevel === 3, mixed = (sevLow && c.anxLevel >= 1) || (sevAnx && c.lowLevel >= 1);
   let care = '';
   if (mixed) care += `<h3>Strong anxiety and low-mood signals together</h3><p style="margin:0">Feeling low and keyed-up at the same time can be an especially hard and risky place to be. Please don't wait on this: reach out to a doctor, therapist, or someone you trust today.</p>`;
   if (sevLow) care += `<h3${mixed?' style="margin-top:12px"':''}>Severe low-mood signals</h3><p style="margin:0">In Kintsugi's study, about 7 in 10 people the model flagged really did score as depressed on the questionnaire. It can be wrong, but this is a strong signal worth taking seriously. Please consider talking with a doctor or therapist.</p>`;
   if (sevAnx) care += `<h3${(mixed||sevLow)?' style="margin-top:12px"':''}>Severe anxiety signals</h3><p style="margin:0">There's no published accuracy for the anxiety part yet, so this reading is less certain. But if you're feeling it, it's real. Please consider talking with a doctor or therapist.</p>`;
-  $('resCare').hidden = !care; if (care) $('resCare').innerHTML = care + HOTLINE;
+  const cf = c.needs || (c.feelings||[]).map(f => FAMILY[f]).filter(Boolean);
+  if (cf.includes('e911')) { $('resCare').innerHTML = URGENT_911 + (care ? '<hr style="border:0;border-top:1px solid var(--line);margin:12px 0">' + care + HOTLINE : ''); $('resCare').hidden = false; $('resCare').style.borderLeftColor = ''; }
+  else if (cf.includes('soon')) { $('resCare').innerHTML = URGENT_SOON + (care ? '<hr style="border:0;border-top:1px solid var(--line);margin:12px 0">' + care + HOTLINE : ''); $('resCare').hidden = false; $('resCare').style.borderLeftColor = care ? '' : 'var(--warn)'; }
+  else { $('resCare').hidden = !care; $('resCare').style.borderLeftColor = ''; if (care) $('resCare').innerHTML = care + HOTLINE; }
   // you feel worse than your voice reads: trust yourself
   const tr = [];
   if (c.selfLow != null && c.selfLow >= 7 && c.lowLevel === 0) tr.push(`down / low at ${c.selfLow}/10`);
@@ -781,14 +822,19 @@ function showResult(c, prev){
   const fams = []; const add = k => { if (!fams.includes(k)) fams.push(k); };
   if (c.anxLevel >= 1 || (c.selfAnx||0) >= 5) add('fear');
   if (c.lowLevel >= 1 || (c.selfLow||0) >= 5) add('sad');
-  (c.feelings||[]).forEach(f => FAMILY[f] && add(FAMILY[f]));
-  const needs = fams.filter(k => k !== 'joy').slice(0, 2);
+  cf.forEach(k => add(k));
+  const needs = fams.filter(k => NEEDS[k] && k !== 'joy').slice(0, 3);
+  const feels = c.feelings || [];
+  const listFor = k => { let d = NEEDS[k].d.slice();
+    if (k === 'body' && (c.body||[]).includes('neck') && !feels.includes('Vertigo') && !feels.includes('Sharp pain')) d.unshift(NECK_RELEASE);
+    feels.forEach(f => { if (SPECIFIC[f] && FEELS_FAM(f, c) === k) d.unshift('<b>' + esc(f) + ':</b> ' + SPECIFIC[f]); });
+    return d; };
   const steady = !fams.length && c.anxLevel === 0 && c.lowLevel === 0 && (c.selfAnx == null || c.selfAnx <= 3) && (c.selfLow == null || c.selfLow <= 3);
   let help = '';
   if (needs.length) {
     help = `<h2>What might help right now</h2>` + (c.feelings&&c.feelings.length ? `<p class="tiny" style="margin:0 0 6px">You noticed: ${esc(c.feelings.join(', '))}</p>` : '') +
       `<p class="opener"><b>Start here:</b> take one slow breath, with the out-breath longer than the in-breath. Or begin with one of the ideas below if you like it better.</p>` +
-      needs.map(k => `<h3 style="margin-top:10px">${NEEDS[k].t}</h3><ul>${NEEDS[k].d.map(x=>`<li>${x}</li>`).join('')}</ul>`).join('') +
+      needs.map(k => `<h3 style="margin-top:10px">${NEEDS[k].t}</h3><ul>${listFor(k).map(x=>`<li>${x}</li>`).join('')}</ul>`).join('') +
       `<p class="tiny" style="margin:8px 0 0">Ideas only. Pick one, or none.</p>`;
   } else if (fams.includes('joy') || steady) {
     const line = fams.includes('joy') ? "Congratulations! I'm so happy for you" : 'You seem to be in a steady place today';
@@ -801,14 +847,20 @@ function showResult(c, prev){
   $('resHelp').hidden = !help; $('resHelp').innerHTML = help;
   // gentle backup reminder
   showBackupNudge();
-  renderSickRow();
+  if (voice) renderSickRow(); else $('sickRow').hidden = true;
   show('result');
 }
+$('bodyOnlyBtn').onclick = async () => {
+  const prev = await allCheckins(); const t = Date.now();
+  const c = {id:'c'+t, time:t, bodyOnly:true, anx:null, low:null, anxLevel:null, lowLevel:null, selfAnx:null, selfLow:null,
+    tags:[], note:'', body:[...bodySel], feelings:[...feelSel], needs: famsFromSel(), secs:null, speech:null, model:''};
+  await saveCheckin(c); histCache = null; showResult(c, prev);
+};
 function resetBody(){ bodySel = new Set(); feelSel = new Set(); renderFeels(); }
 $('doneBtn').onclick = () => { lastResult = null; resetBody(); showHome(); };
 
 // ---------- views ----------
-function show(id){ ['setup','home','rec','rate','result'].forEach(k => $(k).hidden = k !== id); $('bodyCard').hidden = !['home','rec','rate'].includes(id); $('bodyTalk').hidden = id !== 'rec'; window.scrollTo(0,0); }
+function show(id){ ['setup','home','rec','rate','result'].forEach(k => $(k).hidden = k !== id); if ($('bodyOnlyBtn')) $('bodyOnlyBtn').hidden = !(id === 'home' && feelSel.size); $('bodyCard').hidden = !['home','rec','rate'].includes(id); $('bodyTalk').hidden = id !== 'rec'; window.scrollTo(0,0); }
 function showHome(){ show('home'); $('homeStatus').textContent = ''; setPrompt(true); }
 async function init(){ if (await modelCached()) showHome(); else { show('setup'); $('dlBtn').disabled = false; $('dlBtn').textContent = 'Download voice model'; $('dlStatus').textContent=''; $('dlProg').hidden = true; } }
 
@@ -825,12 +877,12 @@ async function renderHistory(){
   if (openPt && !all.some(c => c.id === openPt)) openPt = null;
   const list = $('list'); list.innerHTML = '';
   if (!all.length) { list.innerHTML = '<p class="hint" style="margin:0">Nothing yet.</p>'; $('ptDetail').hidden = true; return; }
-  drawCharts(all); renderDetail();
+  const voiced = all.filter(c => c.anx != null); $('charts').hidden = !voiced.length; if (voiced.length) drawCharts(voiced); renderDetail();
   [...all].reverse().forEach(c => {
     const d = document.createElement('div'); d.className = 'item'; d.id = 'row-' + c.id;
     d.innerHTML = (selMode ? `<input type="checkbox" data-id="${c.id}" aria-label="Select this check-in">` : '') +
       `<div class="body1"><div class="top"><span>${fmtDate(c.time)}</span>${selMode ? '' : '<button class="del">Delete</button>'}</div>
-      <div class="lv"><span>Anxiety: ${LEVELS.anx[c.anxLevel].s}${selfTxt(c.selfAnx)}</span><span>Low mood: ${LEVELS.low[c.lowLevel].s}${selfTxt(c.selfLow)}</span></div></div>`;
+      <div class="lv">${c.anx == null ? '<span>Body check-in</span>' : `<span>Anxiety: ${LEVELS.anx[c.anxLevel].s}${selfTxt(c.selfAnx)}</span><span>Low mood: ${LEVELS.low[c.lowLevel].s}${selfTxt(c.selfLow)}</span>`}</div></div>`;
     const extra = [(c.feelings||[]).join(', '), (c.tags||[]).join(', '), c.note].filter(Boolean).join(' · ');
     if (extra) { const n = document.createElement('div'); n.className='note'; n.textContent = extra; d.querySelector('.body1').appendChild(n); }
     const del = d.querySelector('.del'); if (del) del.onclick = async () => { if (!confirm('Delete this check-in?')) return; await deleteCheckins([c.id]); renderHistory(); };
@@ -851,7 +903,7 @@ $('selDel').onclick = async () => { const ids = selected(); if (!ids.length) ret
   await deleteCheckins(ids); setSelMode(false); toast(`Deleted ${ids.length}.`); renderHistory(); };
 
 function cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
-function drawCharts(all){ drawChart($('chAnx'), all, 'anx', '--anx'); drawChart($('chLow'), all, 'low', '--low'); }
+function drawCharts(all){ all = all.filter(c => c.anx != null); if (!all.length) return; drawChart($('chAnx'), all, 'anx', '--anx'); drawChart($('chLow'), all, 'low', '--low'); }
 function drawChart(svg, all, key, colVar){
   const W = 520, H = 240, L = 8, R = 8, T = 10, B = 34, th = TH[key], lv = LEVELS[key];
   const data = all.slice(-60);
@@ -898,11 +950,11 @@ function renderDetail(){
 function highlightRow(){ document.querySelectorAll('#list .item').forEach(el => el.classList.toggle('hl', el.id === 'row-' + openPt)); }
 
 // ---------- CSV ----------
-const COLS = ['time','date','anx','anxLevel','low','lowLevel','selfAnx','selfLow','body','feelings','tags','note','secs','speech','model'];
+const COLS = ['time','date','anx','anxLevel','low','lowLevel','selfAnx','selfLow','body','feelings','needs','tags','note','secs','speech','model'];
 const q = v => { v = v==null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; };
 async function exportCSV(){
   const all = await allCheckins(); if (!all.length) { toast('No check-ins to export yet.'); return; }
-  const rows = [COLS.join(',')].concat(all.map(c => COLS.map(k => k==='date' ? new Date(c.time).toISOString() : (k==='tags'||k==='feelings'||k==='body') ? q((c[k]||[]).join('; ')) : k==='anxLevel' ? q(LEVELS.anx[c.anxLevel].n) : k==='lowLevel' ? q(LEVELS.low[c.lowLevel].n) : q(c[k])).join(',')));
+  const rows = [COLS.join(',')].concat(all.map(c => COLS.map(k => k==='date' ? new Date(c.time).toISOString() : (k==='tags'||k==='feelings'||k==='body'||k==='needs') ? q((c[k]||[]).join('; ')) : k==='anxLevel' ? q(c.anxLevel == null ? '' : LEVELS.anx[c.anxLevel].n) : k==='lowLevel' ? q(c.lowLevel == null ? '' : LEVELS.low[c.lowLevel].n) : q(c[k])).join(',')));
   const blob = new Blob([rows.join('\n')], {type:'text/csv'}); const a = $('exportLink');
   a.href = URL.createObjectURL(blob); a.download = 'voice-mood-' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
   toast('Exported ' + all.length + ' check-ins.'); setPref('vmt-backup-next', String(all.length + 10));
@@ -918,9 +970,9 @@ $('importIn').onchange = async e => {
   if (ix('time') < 0 || ix('anx') < 0 || ix('low') < 0) { toast('That file isn\'t a Voice Mood Tracker export.'); return; }
   let n = 0; const num = v => v===''||v==null ? null : +v;
   for (const r of rows){ if (r.length < 3) continue; const time = +r[ix('time')]; if (!time) continue;
-    const anx = +r[ix('anx')], low = +r[ix('low')]; const L = k => ix(k) < 0 ? [] : (r[ix(k)]||'').split(';').map(s=>s.trim()).filter(Boolean);
-    await saveCheckin({id:'c'+time, time, anx, low, anxLevel: level(anx, TH.anx), lowLevel: level(low, TH.low), selfAnx: num(r[ix('selfAnx')]), selfLow: num(r[ix('selfLow')]),
-      tags: L('tags'), feelings: L('feelings'), body: L('body'), note: r[ix('note')]||'', secs: num(r[ix('secs')]), speech: ix('speech') < 0 ? null : num(r[ix('speech')]), model: r[ix('model')]||''}); n++; }
+    const anx = num(r[ix('anx')]), low = num(r[ix('low')]); const L = k => ix(k) < 0 ? [] : (r[ix(k)]||'').split(';').map(s=>s.trim()).filter(Boolean);
+    await saveCheckin({id:'c'+time, time, anx, low, anxLevel: anx == null ? null : level(anx, TH.anx), lowLevel: low == null ? null : level(low, TH.low), bodyOnly: anx == null || undefined, selfAnx: num(r[ix('selfAnx')]), selfLow: num(r[ix('selfLow')]),
+      tags: L('tags'), feelings: L('feelings'), body: L('body'), needs: ix('needs') < 0 ? undefined : L('needs'), note: r[ix('note')]||'', secs: num(r[ix('secs')]), speech: ix('speech') < 0 ? null : num(r[ix('speech')]), model: r[ix('model')]||''}); n++; }
   toast('Imported ' + n + ' check-ins.'); renderHistory();
 };
 
