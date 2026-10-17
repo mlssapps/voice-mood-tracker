@@ -157,7 +157,7 @@ a{color:var(--accent)}
 <div class="wrap">
   <header>
     <img src="icon-192.png" alt="">
-    <div><h1>Voice Mood Tracker</h1><p class="sub">Your voice, your device, your patterns.</p></div>
+    <div><h1>Voice Mood Tracker</h1><p class="sub">Your voice, your device, your patterns.</p><p class="tiny" style="margin:0">Version 4</p></div>
   </header>
 
   <nav class="tabs" role="tablist">
@@ -217,27 +217,6 @@ a{color:var(--accent)}
       <input type="range" id="sLow" min="0" max="10" step="1" value="0">
       <div class="scale"><span>Not at all</span><span>Extremely</span></div>
 
-      <details class="fold" id="bodyFold">
-        <summary>Where do you feel it? (optional)</summary>
-        <p class="hint">Tap where you notice something in your body, or the outline around it for your whole body. Feelings that often show up there will appear, so it's easier to put a name to it.</p>
-        <div class="bodywrap">
-          <div class="bodycol">
-          <svg class="body" viewBox="0 0 160 300" role="group" aria-label="Body map">
-            <path class="aura" data-r="all" d="M80 0 C112 0 116 30 112 58 C140 66 150 90 148 140 C147 175 144 205 134 212 C122 222 116 212 112 200 L112 296 L48 296 L48 200 C44 212 38 222 26 212 C16 205 13 175 12 140 C10 90 20 66 48 58 C44 30 48 0 80 0 Z"/>
-            <ellipse class="rg" data-r="head" cx="80" cy="32" rx="23" ry="27"/>
-            <rect class="rg" data-r="throat" x="70" y="60" width="20" height="16" rx="6"/>
-            <path class="rg" data-r="chest" d="M52 80 Q80 74 108 80 L110 128 L50 128 Z"/>
-            <path class="rg" data-r="stomach" d="M50 131 L110 131 L106 176 L54 176 Z"/>
-            <g><rect class="rg" data-r="arms" x="26" y="82" width="20" height="96" rx="10"/><rect class="rg" data-r="arms" x="114" y="82" width="20" height="96" rx="10"/><circle class="rg" data-r="arms" cx="36" cy="190" r="11"/><circle class="rg" data-r="arms" cx="124" cy="190" r="11"/></g>
-            <g><rect class="rg" data-r="legs" x="55" y="180" width="23" height="112" rx="11"/><rect class="rg" data-r="legs" x="82" y="180" width="23" height="112" rx="11"/></g>
-          </svg>
-          <button class="linkbtn" type="button" id="allOver">All over / whole body</button>
-          </div>
-          <div class="bodyside">
-            <div id="feelList"><p class="tiny" style="margin:0">Nothing tapped yet.</p></div>
-          </div>
-        </div>
-      </details>
 
       <span class="sublabel">Anything going on? (optional)</span>
       <div class="chips" id="tags"></div>
@@ -262,6 +241,28 @@ a{color:var(--accent)}
         <details><summary>How accuracy differs by group</summary><div class="acctable"></div></details>
       </div>
       <button class="primary wide" id="doneBtn">Done</button>
+    </div>
+    <div class="card" id="bodyCard" hidden>
+      <h2>Where do you feel it? <span class="tiny" style="font-weight:400">(optional)</span></h2>
+      <p class="hint" id="bodyTalk" hidden style="margin:0 0 6px;color:var(--accent);font-weight:600">You can talk about what you notice in your body.</p>
+        <p class="hint" style="margin-top:0">Even on good days, your body is saying something. Tap where you notice a feeling, or the outline for your whole body. Feelings that often show up there will appear, so it's easier to put a name to one. Your taps are saved with this check-in.</p>
+        <div class="bodywrap">
+          <div class="bodycol">
+          <svg class="body" viewBox="0 0 160 300" role="group" aria-label="Body map">
+            <path class="aura" data-r="all" d="M80 0 C112 0 116 30 112 58 C140 66 150 90 148 140 C147 175 144 205 134 212 C122 222 116 212 112 200 L112 296 L48 296 L48 200 C44 212 38 222 26 212 C16 205 13 175 12 140 C10 90 20 66 48 58 C44 30 48 0 80 0 Z"/>
+            <ellipse class="rg" data-r="head" cx="80" cy="32" rx="23" ry="27"/>
+            <rect class="rg" data-r="throat" x="70" y="60" width="20" height="16" rx="6"/>
+            <path class="rg" data-r="chest" d="M52 80 Q80 74 108 80 L110 128 L50 128 Z"/>
+            <path class="rg" data-r="stomach" d="M50 131 L110 131 L106 176 L54 176 Z"/>
+            <g><rect class="rg" data-r="arms" x="26" y="82" width="20" height="96" rx="10"/><rect class="rg" data-r="arms" x="114" y="82" width="20" height="96" rx="10"/><circle class="rg" data-r="arms" cx="36" cy="190" r="11"/><circle class="rg" data-r="arms" cx="124" cy="190" r="11"/></g>
+            <g><rect class="rg" data-r="legs" x="55" y="180" width="23" height="112" rx="11"/><rect class="rg" data-r="legs" x="82" y="180" width="23" height="112" rx="11"/></g>
+          </svg>
+          <button class="linkbtn" type="button" id="allOver">All over / whole body</button>
+          </div>
+          <div class="bodyside">
+            <div id="feelList"><p class="tiny" style="margin:0">Nothing tapped yet.</p></div>
+          </div>
+        </div>
     </div>
   </section>
 
@@ -305,20 +306,20 @@ a{color:var(--accent)}
   <!-- ===== ABOUT ===== -->
   <section id="pAbout" hidden>
     <div class="card">
+      <h2>What this is</h2>
+      <p>A private way to notice patterns in how you're doing. Each check-in records 30 to 60 seconds of you talking, then a voice model listens to <i>how</i> you speak (pitch, rhythm, energy, pauses), not what you say. It gives two signals: <b>anxiety</b> and <b>low mood</b>.</p>
+    </div>
+    <div class="card">
       <h2>How to use</h2>
       <ol style="padding-left:22px;margin:0">
         <li>Tap <b>Check in</b> and talk for 30–60 seconds about anything. Don't read aloud.</li>
-        <li>While it analyzes, rate how you feel and tap where you feel it in your body (optional). Add a quick note if you like; over time your notes become a short journal alongside your scores.</li>
+        <li>Tap where you feel things in your body (optional). The map stays with you the whole check-in. While it analyzes, rate how you feel and add a quick note if you like; over time your notes become a short journal alongside your scores.</li>
         <li>Read your result. <b>What might help</b> offers grounding and recovery ideas. Pick one, or none.</li>
         <li>Check in regularly. After 5 check-ins, you'll start to see how each day compares with your usual.</li>
         <li><b>Private by design:</b> your recording is never saved; it's thrown away after scoring. Everything stays on your device and works fully offline. You can export your history as a backup, to move it to a new device, or to share with a health professional. Because it's personal health information, we don't recommend sharing it with anyone else.</li>
       </ol>
-      <p style="margin:12px 0 0"><b>Why regular check-ins help:</b> noticing where you feel something and putting a name to it builds the skill of reading your own signals. That can be especially helpful for people with alexithymia, who find it hard to identify what they feel.</p>
-    </div>
-    <div class="card">
-      <h2>What this is</h2>
-      <p>A private way to notice patterns in how you're doing. Each check-in records 30 to 60 seconds of you talking, then a voice model listens to <i>how</i> you speak (pitch, rhythm, energy, pauses), not what you say. It gives two signals: <b>anxiety</b> and <b>low mood</b>.</p>
-      <p>It's also a practice. Describing what's around you is grounding. Talking about your day is reflection. Rating yourself before you see the result, and noticing where you feel things in your body, builds the skill of reading your own signals. That may help people with alexithymia, who find it hard to name what they feel.</p>
+      <p style="margin:12px 0 0"><b>Why regular check-ins help:</b> it's also a practice. Describing what's around you is grounding, and talking about your day is reflection. Stepping back to notice where you feel something, and putting a name to it, builds the skill of reading your own signals. Research shows that naming a feeling can calm the brain's alarm response. In clinical trials, structured mindfulness programs built on these same skills worked as well as some medications for some people with anxiety or recurring depression. This app is a much lighter practice than those programs, and it can be especially helpful for people with alexithymia, who find it hard to identify what they feel.</p>
+      <p style="margin:10px 0 0"><b>Use it alongside care, not instead of it.</b> Work with a doctor or mental health professional on any physical or chemical causes, and treat this app as a complement to treatment, never a replacement.</p>
     </div>
     <div class="card">
       <h2>How accurate is it?</h2>
@@ -343,7 +344,6 @@ a{color:var(--accent)}
       <p class="tiny" id="storeInfo" style="margin:0 0 8px"></p>
       <p style="margin:0">Your recording is analyzed on this device and then thrown away. Only the scores, your ratings, and notes are saved, in this app only. Nothing is sent anywhere. The model was downloaded once from this site, and the app checks its fingerprints.</p>
       <p style="margin:8px 0 0"><b>See for yourself:</b> turn on airplane mode and do a check-in. It still works with no internet, because nothing is sent anywhere.</p>
-      <p style="margin:8px 0 0">To keep a copy of your history, use <b>Export a copy</b> at the top of the History tab.</p>
     </div>
     <div class="card">
       <h2>With gratitude to Kintsugi Health</h2>
@@ -370,10 +370,15 @@ a{color:var(--accent)}
         <p class="hint">Frees 354 MB. Your history stays. You'd need to download the model again to check in.</p>
         <button id="rmModel">Remove voice model</button>
       </details>
-      <p class="tiny" style="margin-top:14px">Version 3 · made by MLSS</p>
+      <p class="tiny" style="margin-top:14px">Version 4 · Made by MLSS · built with Claude by Anthropic</p>
     </div>
     <div class="card vh">
       <details><summary>Version history</summary>
+        <h3>Version 4</h3><ul>
+          <li>The body map is open and stays with you through the whole check-in: home, recording, and rating.</li>
+          <li>"Start here" breath and a rotating "today's practice" on good days too.</li>
+          <li>Version number under the title, clearer "your usual" count, and tidier, research-checked About text.</li>
+        </ul>
         <h3>Version 3</h3><ul>
           <li>Speech check: if it can't hear enough talking, nothing is scored or saved.</li>
           <li>"I can't hear you" warning while recording.</li>
@@ -451,6 +456,9 @@ const NEEDS = {
   joy:    {t:'Your needs may be met right now', d:['Pause and savor it.','Share it with someone.','Notice where in your body it lives.']}
 };
 
+const PRACTICES = ["Name one thing you can hear right now.", "Notice where the good feeling sits in your body.", "Name three colors you can see from where you are.",
+  "Notice the temperature of the air on your skin.", "Name one thing you're looking forward to.", "Notice your feet on the ground for three breaths.",
+  "Name one small thing that went right today.", "Notice your shoulders. Let them drop a little."];
 const level = (v, th) => { let i = 0; while (i < th.length && v > th[i]) i++; return i; };
 function toast(m){ const t=$('toast'); t.textContent=m; t.style.display='block'; clearTimeout(toast.h); toast.h=setTimeout(()=>t.style.display='none',3200); }
 
@@ -684,7 +692,6 @@ $('allOver').onclick = () => toggleRegion('all');
 
 function resetRating(){ ['sAnx','sLow'].forEach(id => { $(id).value = 0; rated[id] = false; $(id+'V').textContent = ''; lockSlider(id, false); $(id+'B').classList.remove('primary'); }); $('note').value = '';
   $('tags').innerHTML = ''; TAGS.forEach(t => { const b = document.createElement('button'); b.type='button'; b.textContent=t; b.onclick=()=>b.classList.toggle('on'); $('tags').appendChild(b); });
-  bodySel = new Set(); feelSel = new Set(); renderFeels(); $('bodyFold').open = false;
   $('saveRate').disabled = false; $('skipRate').disabled = false; }
 async function submitRating(skip){
   if (!pending) return;
@@ -731,8 +738,8 @@ async function showBackupNudge(){
   $('bkOff').onclick = () => { setPref('vmt-backup-remind', '0'); updateBackupSetting(); card.hidden = true; toast('Backup reminders off. You can turn them back on in About.'); };
 }
 function updateBackupSetting(){ const b = $('bkSet'); if (b) b.textContent = 'Backup reminders: ' + (pref('vmt-backup-remind', '1') === '1' ? 'On' : 'Off'); }
-function usualText(v, prevVals){
-  if (prevVals.length < 5) return `Your personal average appears after 5 check-ins (${prevVals.length} so far).`;
+function usualText(v, prevVals, left){
+  if (prevVals.length < 5) return `Your personal average appears after 5 check-ins (${prevVals.length} so far${left ? `, ${left} Sick day${left===1?'':'s'} left out` : ''}).`;
   const m = prevVals.reduce((a,b)=>a+b,0)/prevVals.length; const sd = Math.sqrt(prevVals.reduce((a,b)=>a+(b-m)*(b-m),0)/prevVals.length) || 0.05;
   const z = (v - m)/sd; return z > 1 ? 'Higher than your usual.' : z < -1 ? 'Lower than your usual.' : 'About your usual.';
 }
@@ -741,7 +748,7 @@ function rangeText(th, lv){ if (lv === 0) return `this range ends at ${f2(th[0])
 // where the dot sits inside its own range (open-ended ranges use a 0.6-wide span, then stay inside the box)
 function dotPos(v, th, lv){ const n = th.length + 1; const a = lv === 0 ? th[0] - 0.6 : th[lv-1], b = lv === th.length ? th[th.length-1] + 0.6 : th[lv];
   const f = Math.max(0.12, Math.min(0.88, (v - a)/(b - a))); return ((lv + f) / n) * 100; }
-function resultCard(el, key, title, v, lv, prevVals){
+function resultCard(el, key, title, v, lv, prevVals, left){
   const L = LEVELS[key], th = TH[key], col = cssv(L[lv].c);
   el.style.borderLeftColor = col;
   el.innerHTML = `<h3 style="color:var(--muted)">${title}</h3><div class="lvl" style="color:${col}">${L[lv].n}</div>
@@ -749,14 +756,14 @@ function resultCard(el, key, title, v, lv, prevVals){
     <div class="segs" style="color:${col}">${L.map((z,i)=>`<span class="${i===lv?'on':''}"></span>`).join('')}<i style="left:${dotPos(v, th, lv).toFixed(1)}%"></i></div>
     <div class="seglab">${L.map((z,i)=>`<span class="${i===lv?'on':''}" style="${i===lv?'color:'+col:''}">${z.s}</span>`).join('')}</div>
     <p class="score">Voice score ${f2(v)} · ${rangeText(th, lv)}</p>
-    <div class="usual">${usualText(v, prevVals)}</div>`;
+    <div class="usual">${usualText(v, prevVals, left)}</div>`;
 }
 const HOTLINE = `<p style="margin:8px 0 0">If you're struggling or thinking about hurting yourself, call or text <b>988</b> (US), or text <b>HOME</b> to <b>741741</b>. If you're in danger right now, call 911.</p>`;
 function showResult(c, prev){
   lastResult = [c, prev];
-  const pool = usualPool(prev);
-  resultCard($('resAnx'), 'anx', 'Anxiety signals', c.anx, c.anxLevel, pool.map(p=>p.anx));
-  resultCard($('resLow'), 'low', 'Low-mood signals', c.low, c.lowLevel, pool.map(p=>p.low));
+  const pool = usualPool(prev), left = prev.length - pool.length;
+  resultCard($('resAnx'), 'anx', 'Anxiety signals', c.anx, c.anxLevel, pool.map(p=>p.anx), left);
+  resultCard($('resLow'), 'low', 'Low-mood signals', c.low, c.lowLevel, pool.map(p=>p.low), left);
   // care note for the top range of either signal, strongest when both are raised together
   const sevLow = c.lowLevel === 2, sevAnx = c.anxLevel === 3, mixed = (sevLow && c.anxLevel >= 1) || (sevAnx && c.lowLevel >= 1);
   let care = '';
@@ -785,7 +792,10 @@ function showResult(c, prev){
       `<p class="tiny" style="margin:8px 0 0">Ideas only. Pick one, or none.</p>`;
   } else if (fams.includes('joy') || steady) {
     const line = fams.includes('joy') ? "Congratulations! I'm so happy for you" : 'You seem to be in a steady place today';
+    const practice = PRACTICES[Math.floor(c.time / 86400000) % PRACTICES.length];
     help = `<div class="joy"><span class="face" aria-hidden="true">😊</span><div><b>${line}</b><p class="tiny" style="margin:2px 0 0">${NEEDS.joy.t}.</p></div></div>` +
+      `<p class="opener" style="margin-top:12px"><b>Start here:</b> even on a good day, take one slow breath, with the out-breath longer than the in-breath.</p>` +
+      `<p style="margin:8px 0 2px"><b>Today's practice:</b> ${practice}</p>` +
       `<ul>${NEEDS.joy.d.map(x=>`<li>${x}</li>`).join('')}</ul>`;
   }
   $('resHelp').hidden = !help; $('resHelp').innerHTML = help;
@@ -794,10 +804,11 @@ function showResult(c, prev){
   renderSickRow();
   show('result');
 }
-$('doneBtn').onclick = () => { lastResult = null; showHome(); };
+function resetBody(){ bodySel = new Set(); feelSel = new Set(); renderFeels(); }
+$('doneBtn').onclick = () => { lastResult = null; resetBody(); showHome(); };
 
 // ---------- views ----------
-function show(id){ ['setup','home','rec','rate','result'].forEach(k => $(k).hidden = k !== id); window.scrollTo(0,0); }
+function show(id){ ['setup','home','rec','rate','result'].forEach(k => $(k).hidden = k !== id); $('bodyCard').hidden = !['home','rec','rate'].includes(id); $('bodyTalk').hidden = id !== 'rec'; window.scrollTo(0,0); }
 function showHome(){ show('home'); $('homeStatus').textContent = ''; setPrompt(true); }
 async function init(){ if (await modelCached()) showHome(); else { show('setup'); $('dlBtn').disabled = false; $('dlBtn').textContent = 'Download voice model'; $('dlStatus').textContent=''; $('dlProg').hidden = true; } }
 
